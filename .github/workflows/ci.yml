@@ -66,6 +66,14 @@ jobs:
           cache-dependency-glob: uv.lock
       - run: uv python install
 
-      - name: Audit dependencies for known vulnerabilities
-        run: uvx pip-audit --strict --disable-pip -r <(uv export --no-dev --no-emit-project --format requirements-txt)
-        shell: bash
+      - name: Export runtime dependencies
+        # NO_COLOR matters: the workflow sets FORCE_COLOR=1, and uv would
+        # otherwise write ANSI escapes into the file that pip-audit then
+        # fails to parse.
+        env:
+          NO_COLOR: "1"
+          FORCE_COLOR: ""
+        run: uv export --no-dev --no-emit-project --format requirements-txt -o requirements.audit.txt
+
+      - name: Audit for known vulnerabilities
+        run: uvx pip-audit --strict --disable-pip -r requirements.audit.txt
