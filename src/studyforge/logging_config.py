@@ -6,6 +6,13 @@ greppable and could be shipped to a log aggregator without reparsing prose.
 
 Nothing here ever logs secrets or full document bodies; call sites pass
 identifiers and counts, and :func:`log_event` truncates stray long values.
+
+All custom fields travel inside a single ``LogRecord`` attribute
+(:data:`FIELDS_ATTRIBUTE`) rather than being splatted onto the record. Python's
+logging module raises ``KeyError`` if an ``extra`` key collides with a built-in
+record attribute, and several natural field names -- ``created``, ``name``,
+``module``, ``message`` -- do exactly that. Namespacing makes the collision
+impossible instead of leaving a landmine on a rarely-executed code path.
 """
 
 from __future__ import annotations
@@ -16,11 +23,9 @@ import sys
 from typing import Any
 
 _MAX_FIELD_CHARS = 200
-_RESERVED = frozenset(logging.LogRecord("", 0, "", 0, "", None, None).__dict__) | {
-    "message",
-    "asctime",
-    "taskName",
-}
+
+#: The single record attribute holding every structured field.
+FIELDS_ATTRIBUTE = "studyforge_fields"
 
 
 class JSONFormatter(logging.Formatter):
@@ -33,7 +38,7 @@ class JSONFormatter(logging.Formatter):
             "logger": record.name,
             "message": record.getMessage(),
         }
-        payload.update(_extra_fields(record))
+        payload.update(event_fields(record))
         if record.exc_info:
             payload["exception"] = self.formatException(record.exc_info)
         return json.dumps(payload, default=str)
@@ -44,18 +49,18 @@ class ConsoleFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         base = f"{record.levelname:<8} {record.name}: {record.getMessage()}"
-        extras = _extra_fields(record)
-        if extras:
-            base += "  " + " ".join(f"{k}={v}" for k, v in extras.items())
+        fields = event_fields(record)
+        if fields:
+            base += "  " + " ".join(f"{k}={v}" for k, v in fields.items())
         if record.exc_info:
             base += "\n" + self.formatException(record.exc_info)
         return base
 
 
-def _extra_fields(record: logging.LogRecord) -> dict[str, Any]:
-    return {
-        k: v for k, v in record.__dict__.items() if k not in _RESERVED and not k.startswith("_")
-    }
+def event_fields(record: logging.LogRecord) -> dict[str, Any]:
+    """The structured fields attached to ``record``, if any."""
+    fields = getattr(record, FIELDS_ATTRIBUTE, None)
+    return dict(fields) if isinstance(fields, dict) else {}
 
 
 def configure_logging(level: str = "INFO", fmt: str = "console") -> None:
@@ -93,11 +98,9 @@ def log_event(
 ) -> None:
     """Emit a named domain event with structured fields.
 
-    Long string fields are truncated: study material is the user's private data
-    and has no business being copied wholesale into a log file.
+    Any field name is safe here, including ones that clash with ``LogRecord``
+    attributes. Long string values are truncated: study material is the user's
+    private data and has no business being copied wholesale into a log file.
     """
-    logger.log(
-        level,
-        event,
-        extra={"event": event, **{k: _truncate(v) for k, v in fields.items()}},
-    )
+    payload = {"event": event, **{k: _truncate(v) for k, v in fields.items()}}
+    logger.log(level, event, extra={FIELDS_ATTRIBUTE: payload})

@@ -8,17 +8,19 @@ import logging
 import pytest
 
 from studyforge.logging_config import (
+    FIELDS_ATTRIBUTE,
     ConsoleFormatter,
     JSONFormatter,
     configure_logging,
+    event_fields,
     log_event,
 )
 
 
-def _record(msg: str = "hello", **extra: object) -> logging.LogRecord:
+def _record(msg: str = "hello", **fields: object) -> logging.LogRecord:
     record = logging.LogRecord("test.logger", logging.INFO, __file__, 1, msg, None, None)
-    for key, value in extra.items():
-        setattr(record, key, value)
+    if fields:
+        setattr(record, FIELDS_ATTRIBUTE, fields)
     return record
 
 
@@ -56,8 +58,11 @@ class TestLogEvent:
             log_event(logger, "review_completed", card_id=1, rating=3)
         record = caplog.records[0]
         assert record.message == "review_completed"
-        assert record.event == "review_completed"  # type: ignore[attr-defined]
-        assert record.card_id == 1  # type: ignore[attr-defined]
+        assert event_fields(record) == {
+            "event": "review_completed",
+            "card_id": 1,
+            "rating": 3,
+        }
 
     def test_truncates_long_values_so_notes_do_not_land_in_logs(
         self, caplog: pytest.LogCaptureFixture
@@ -66,7 +71,7 @@ class TestLogEvent:
         logger = logging.getLogger("sf.test")
         with caplog.at_level(logging.INFO, logger="sf.test"):
             log_event(logger, "extraction_completed", text="x" * 5000)
-        text: str = caplog.records[0].text  # type: ignore[attr-defined]
+        text: str = event_fields(caplog.records[0])["text"]
         assert len(text) < 300
         assert text.endswith("chars)")
 
@@ -74,13 +79,25 @@ class TestLogEvent:
         logger = logging.getLogger("sf.test")
         with caplog.at_level(logging.INFO, logger="sf.test"):
             log_event(logger, "e", title="Data Structures")
-        assert caplog.records[0].title == "Data Structures"  # type: ignore[attr-defined]
+        assert event_fields(caplog.records[0])["title"] == "Data Structures"
 
     def test_respects_an_explicit_level(self, caplog: pytest.LogCaptureFixture) -> None:
         logger = logging.getLogger("sf.test")
         with caplog.at_level(logging.DEBUG, logger="sf.test"):
             log_event(logger, "ai_request_failed", level=logging.ERROR, provider="ollama")
         assert caplog.records[0].levelno == logging.ERROR
+
+    def test_a_field_named_like_a_logrecord_attribute_is_safe(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """`created`, `name` and `module` are LogRecord attributes; passing them
+        as fields used to raise KeyError deep inside the logging module."""
+        logger = logging.getLogger("sf.test")
+        with caplog.at_level(logging.INFO, logger="sf.test"):
+            log_event(logger, "flashcards_generated", created=5, name="x", module="y", msg="z")
+        fields = event_fields(caplog.records[0])
+        assert fields["created"] == 5
+        assert fields["name"] == "x"
 
 
 class TestConfigureLogging:
