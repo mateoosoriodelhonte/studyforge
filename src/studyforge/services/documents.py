@@ -275,6 +275,14 @@ def _persist_concepts(
     if not candidates:
         return 0, 0
 
+    # Extraction runs over the whole document so that frequency evidence sees
+    # the full picture, which means candidates come back without a chunk. Locate
+    # each one afterwards: provenance is the reason chunks exist, and a card
+    # that cannot point at its source passage is a card the learner cannot check.
+    located = {
+        candidate.normalized_name: _locate_chunk(candidate, chunks) for candidate in candidates
+    }
+
     existing = {
         concept.normalized_name: concept
         for concept in session.scalars(
@@ -294,7 +302,8 @@ def _persist_concepts(
         if not key:
             continue
 
-        source_chunk = chunk_by_ordinal.get(candidate.chunk_ordinal or -1)
+        ordinal = located.get(candidate.normalized_name)
+        source_chunk = chunk_by_ordinal.get(ordinal) if ordinal is not None else None
         if (current := existing.get(key)) is not None:
             matched += 1
             # Only ever add information; never overwrite a better definition or
@@ -325,6 +334,29 @@ def _persist_concepts(
 
     session.flush()
     return created, matched
+
+
+def _locate_chunk(candidate: ConceptCandidate, chunks: list[Chunk]) -> int | None:
+    """Find the chunk a concept most likely came from.
+
+    Prefers the chunk containing the concept's definition, since that is the
+    passage a learner would want to reread. Falls back to the first chunk
+    mentioning the concept by name.
+    """
+    if candidate.definition:
+        # The stored definition is cleaned (capitalised, punctuated), so match
+        # on a distinctive prefix of it rather than the whole string.
+        probe = candidate.definition.strip(".").strip()[:60].lower()
+        if probe:
+            for chunk in chunks:
+                if probe in chunk.text.lower():
+                    return chunk.ordinal
+
+    name = candidate.name.lower()
+    for chunk in chunks:
+        if name in chunk.text.lower():
+            return chunk.ordinal
+    return None
 
 
 def _finish_without_text(
