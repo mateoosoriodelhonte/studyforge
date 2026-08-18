@@ -17,6 +17,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from studyforge import __version__
 from studyforge.config import Environment, Settings, get_settings
+from studyforge.db import create_db_engine, create_session_factory
 from studyforge.logging_config import configure_logging, log_event
 
 logger = logging.getLogger(__name__)
@@ -26,6 +27,11 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings: Settings = app.state.settings
     settings.ensure_directories()
+
+    engine = create_db_engine(settings)
+    app.state.engine = engine
+    app.state.session_factory = create_session_factory(engine)
+
     log_event(
         logger,
         "application_started",
@@ -40,6 +46,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             extra={"event": "insecure_secret_key"},
         )
     yield
+
+    engine.dispose()
     log_event(logger, "application_stopped")
 
 
