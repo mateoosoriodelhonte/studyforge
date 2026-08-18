@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import stat, badge, empty_state, concept_status %}
+{% block title %}Dashboard — StudyForge{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header__text">
+    <h1>Dashboard</h1>
+    <p>{{ greeting }}</p>
+  </div>
+  <div class="page-header__actions">
+    {% if totals.due_now %}
+    <a class="button button--primary" href="/study">Start studying ({{ totals.due_now }} due)</a>
+    {% else %}
+    <a class="button" href="/study">Start studying</a>
+    {% endif %}
+    <a class="button" href="/courses/new">New course</a>
+  </div>
+</div>
+
+<section class="grid grid--stats" aria-label="Summary" style="margin-bottom:2rem;">
+  {{ stat(totals.due_now, 'Cards due now', attention=totals.due_now > 0) }}
+  {{ stat(totals.cards, 'Cards in total') }}
+  {{ stat(totals.courses, 'Active ' ~ totals.courses | plural('course')) }}
+</section>
+
+<section style="margin-bottom:2.5rem;">
+  <div class="panel__header">
+    <h2>Courses</h2>
+    {% if archived_count %}
+    <a href="/courses?archived=1" class="faint">{{ archived_count }} archived</a>
+    {% endif %}
+  </div>
+
+  {% if courses %}
+  <div class="grid grid--cards">
+    {% for entry in courses %}
+    <a class="course-card" href="/courses/{{ entry.course.id }}">
+      {% if entry.course.code %}<span class="course-card__code">{{ entry.course.code }}</span>{% endif %}
+      <h3>{{ entry.course.name }}</h3>
+      {% if entry.course.description %}
+      <p class="muted" style="font-size:var(--step--1);">{{ entry.course.description | truncate(120) }}</p>
+      {% endif %}
+      <div class="course-card__meta">
+        <span>{{ entry.stats.documents }} {{ entry.stats.documents | plural('document') }}</span>
+        <span>{{ entry.stats.flashcards }} {{ entry.stats.flashcards | plural('card') }}</span>
+        {% if entry.stats.due_now %}
+        <span style="color:var(--danger);font-weight:600;">{{ entry.stats.due_now }} due</span>
+        {% endif %}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  {{ empty_state(
+      'No courses yet',
+      'A course is where your notes, concepts and cards live. Create one to get started — you can add material straight after.',
+      'Create your first course', '/courses/new') }}
+  {% endif %}
+</section>
+
+<div class="grid grid--split">
+  <section class="panel">
+    <div class="panel__header">
+      <h2>Needs work</h2>
+      <a href="/progress" class="faint">All progress</a>
+    </div>
+    {% if weak_concepts %}
+    <ul class="concept-list">
+      {% for item in weak_concepts %}
+      <li class="concept">
+        <div class="concept__head">
+          <span class="concept__name">{{ item.name }}</span>
+          {{ concept_status(item.assessment.status.value, item.assessment.status_definition) }}
+        </div>
+        <p class="concept__definition">
+          {{ item.assessment.accuracy | percent }} correct across
+          {{ item.assessment.observation_count }} recent
+          {{ item.assessment.observation_count | plural('answer') }}
+        </p>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted">
+      Nothing flagged yet. Concepts appear here once you have answered them at
+      least {{ min_observations }} times and are getting them wrong more often
+      than not.
+    </p>
+    {% endif %}
+  </section>
+
+  <section class="panel">
+    <div class="panel__header"><h2>Recent activity</h2></div>
+    {% if recent_sessions %}
+    <div class="table-wrap">
+      <table>
+        <caption class="visually-hidden">Recent study sessions</caption>
+        <thead>
+          <tr><th scope="col">When</th><th scope="col" class="numeric">Cards</th><th scope="col" class="numeric">Recalled</th></tr>
+        </thead>
+        <tbody>
+          {% for session in recent_sessions %}
+          <tr>
+            <td><time datetime="{{ session.started_at.isoformat() }}" title="{{ session.started_at | absolute_time }}">{{ session.started_at | relative_time }}</time></td>
+            <td class="numeric">{{ session.cards_reviewed }}</td>
+            <td class="numeric">{{ session.recall_rate | percent }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="muted">No study sessions yet. Once you review some cards, your sessions show up here.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

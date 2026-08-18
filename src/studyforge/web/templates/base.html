@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}StudyForge{% endblock %}</title>
+  <meta name="description" content="{% block description %}A local-first study system: ingest your notes, extract concepts, and drill them with spaced repetition.{% endblock %}">
+  <meta name="color-scheme" content="light dark">
+  <link rel="stylesheet" href="{{ url_for('static', path='/app.css') }}">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230f6d63'/><text x='16' y='23' font-family='system-ui' font-size='19' font-weight='700' fill='white' text-anchor='middle'>S</text></svg>">
+  <script src="{{ url_for('static', path='/htmx.min.js') }}" defer></script>
+  <script src="{{ url_for('static', path='/app.js') }}" defer></script>
+</head>
+<body hx-boost="false">
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <header class="masthead">
+    <div class="masthead__inner">
+      <a class="brand" href="/">
+        <span class="brand__mark" aria-hidden="true">S</span>
+        StudyForge
+      </a>
+      <nav class="nav" aria-label="Main">
+        <a href="/dashboard" {% if active_nav == 'dashboard' %}aria-current="page"{% endif %}>Dashboard</a>
+        <a href="/study" {% if active_nav == 'study' %}aria-current="page"{% endif %}>Study</a>
+        <a href="/progress" {% if active_nav == 'progress' %}aria-current="page"{% endif %}>Progress</a>
+        <a href="/search" {% if active_nav == 'search' %}aria-current="page"{% endif %}>Search</a>
+        <a href="/settings" {% if active_nav == 'settings' %}aria-current="page"{% endif %}>Settings</a>
+      </nav>
+    </div>
+  </header>
+
+  {% if flashes %}
+  <div class="flashes">
+    <div style="max-width:74rem;margin-inline:auto;padding:0.75rem 1.25rem 0;">
+      {% for flash in flashes %}
+      <div class="notice notice--{{ flash.level }}" role="{{ 'alert' if flash.level == 'error' else 'status' }}">
+        <span class="notice__icon" aria-hidden="true">{{ {'success':'✓','error':'!','info':'i','warning':'▲'}.get(flash.level, 'i') }}</span>
+        <p>{{ flash.message }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <main id="main" class="{% block main_class %}{% endblock %}" tabindex="-1">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer__inner">
+      <p>StudyForge — a local-first study system. Your notes stay on this machine.</p>
+      <p>
+        <a href="https://github.com/mateoosoriodelhonte/studyforge">Source</a>
+        &middot; <a href="/api/docs">API</a>
+        &middot; <a href="/settings">{{ 'AI: ' ~ ai_provider if ai_provider else 'Settings' }}</a>
+      </p>
+    </div>
+  </footer>
+
+  <!-- HTMX swaps content without a page load, so assistive technology has no
+       reason to re-read anything. app.js writes updates here. -->
+  <div id="live-region" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true"></div>
+</body>
+</html>

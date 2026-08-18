@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "studyforge",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": ["run", "studyforge", "serve", "--port", "8000"],
+      "port": 8000
+    }
+  ]
+}

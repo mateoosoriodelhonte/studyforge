@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import stat, badge, document_status, notice %}
+{% block title %}{{ document.title }} — StudyForge{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header__text">
+    <p class="breadcrumb"><a href="/dashboard">Dashboard</a> / <a href="/courses/{{ document.course_id }}">{{ course.name }}</a> / {{ document.title }}</p>
+    <h1>{{ document.title }}</h1>
+    <p>
+      {{ document_status(document) }}
+      &middot; {{ document.source_type.value }}
+      {% if document.original_filename %} &middot; <span class="tabular">{{ document.original_filename }}</span>{% endif %}
+      &middot; added {{ document.created_at | relative_time }}
+    </p>
+  </div>
+  <div class="page-header__actions">
+    <form method="post" action="/documents/{{ document.id }}/delete"
+          onsubmit="return confirm('Delete this document? Cards generated from it are kept, but lose their link to the source.');">
+      <button type="submit" class="button button--danger">Delete</button>
+    </form>
+  </div>
+</div>
+
+{% if document.status.value == 'no_text' %}
+{{ notice(document.extraction_error, 'warning', 'No readable text') }}
+{% elif document.status.value == 'failed' %}
+{{ notice(document.extraction_error, 'error', 'Extraction failed') }}
+{% endif %}
+
+<section class="grid grid--stats" aria-label="Document details" style="margin-bottom:2rem;">
+  {{ stat('{:,}'.format(document.char_count), 'Characters') }}
+  {{ stat(chunks | length, chunks | length | plural('Chunk')) }}
+  {% if document.page_count %}{{ stat(document.page_count, document.page_count | plural('Page')) }}{% endif %}
+  {{ stat('{:.1f} KB'.format(document.size_bytes / 1024), 'Size') }}
+  {{ stat(concepts | length, 'Concepts from this') }}
+</section>
+
+{% if concepts %}
+<section class="panel" style="margin-bottom:2rem;">
+  <div class="panel__header"><h2>Concepts found here</h2></div>
+  <ul class="concept-list">
+    {% for concept in concepts %}
+    <li class="concept">
+      <div class="concept__head">
+        <span class="concept__name">{{ concept.name }}</span>
+        {{ badge(concept.extraction_method.value | replace('_', ' '), 'neutral') }}
+      </div>
+      {% if concept.definition %}<p class="concept__definition">{{ concept.definition }}</p>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% if chunks %}
+<section class="panel" style="margin-bottom:2rem;">
+  <div class="panel__header">
+    <h2>Chunks</h2>
+    <span class="faint">Where generated material points back to</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <caption class="visually-hidden">Text chunks extracted from this document</caption>
+      <thead><tr><th scope="col" class="numeric">#</th><th scope="col">Heading</th><th scope="col">Text</th><th scope="col" class="numeric">Chars</th></tr></thead>
+      <tbody>
+        {% for chunk in chunks %}
+        <tr id="chunk-{{ chunk.id }}">
+          <td class="numeric">{{ chunk.ordinal }}</td>
+          <td>{{ chunk.heading or '—' }}</td>
+          <td style="max-width:34rem;">{{ chunk.text | truncate(200) }}</td>
+          <td class="numeric">{{ chunk.char_count }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+{% if document.extracted_text %}
+<section class="panel">
+  <div class="panel__header"><h2>Extracted text</h2></div>
+  <p class="faint" style="margin-bottom:0.75rem;">Normalised: hyphenation rejoined, hard wraps unwrapped, page numbers removed.</p>
+  <div class="extract" tabindex="0" role="region" aria-label="Extracted text">{{ document.extracted_text }}</div>
+</section>
+{% endif %}
+{% endblock %}

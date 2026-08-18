@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import badge %}
+{% block title %}StudyForge — a local-first study system{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1>Turn your own notes into a study schedule that actually works.</h1>
+  <p class="hero__lede">
+    StudyForge reads the notes and PDFs you already have, pulls out the concepts
+    worth learning, and drills them with FSRS-6 spaced repetition. It runs on
+    your machine, and it works with no AI configured at all.
+  </p>
+  <div class="button-row">
+    <a class="button button--primary button--large" href="/dashboard">Open dashboard</a>
+    <a class="button button--large" href="/courses/new">Create a course</a>
+  </div>
+</section>
+
+<section class="panel" style="margin-bottom:2rem;">
+  <h2 style="font-size:var(--step-1);margin-bottom:0.5rem;">How it works</h2>
+  <p class="muted measure">
+    Add a course, paste your notes or upload a PDF, and StudyForge extracts the
+    text, splits it at meaningful boundaries, and finds the terms the material
+    actually defines. From there you can generate flashcards and quizzes, or
+    write your own — and every generated card links back to the exact passage it
+    came from.
+  </p>
+</section>
+
+<section class="grid grid--cards feature-grid" aria-label="What StudyForge does">
+  <article class="panel feature">
+    <h3>Real spaced repetition</h3>
+    <p>
+      FSRS-6 — the algorithm Anki ships — implemented in full and verified
+      against the reference implementation across 4,096 review transitions.
+      Scheduling is pure arithmetic; no language model touches it.
+    </p>
+  </article>
+  <article class="panel feature">
+    <h3>Works with no AI</h3>
+    <p>
+      Concept extraction, card generation, quiz generation and scheduling are
+      all deterministic. AI is an optional enhancement, never a dependency, and
+      the default is off.
+    </p>
+  </article>
+  <article class="panel feature">
+    <h3>Your notes stay yours</h3>
+    <p>
+      SQLite on your disk. No account, no sync, no telemetry. Nothing leaves the
+      machine unless you switch on an AI provider, and the settings page tells
+      you exactly what would be sent.
+    </p>
+  </article>
+  <article class="panel feature">
+    <h3>Honest about what it knows</h3>
+    <p>
+      A concept you have answered twice is marked <em>not enough data</em>, not
+      “mastered”. Every status label has a written definition, and every
+      percentage shows the sample it came from.
+    </p>
+  </article>
+  <article class="panel feature">
+    <h3>Traceable material</h3>
+    <p>
+      Generated cards and questions record the document and passage they came
+      from, so you can always check the source rather than trusting the card.
+    </p>
+  </article>
+  <article class="panel feature">
+    <h3>Built for the keyboard</h3>
+    <p>
+      Space reveals, <kbd>1</kbd>–<kbd>4</kbd> rate, <kbd>Esc</kbd> leaves. A
+      full review session never needs the mouse, on desktop or on a phone.
+    </p>
+  </article>
+</section>
+{% endblock %}

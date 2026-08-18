@@ -26,6 +26,9 @@ def main(argv: list[str] | None = None) -> int:
     db_sub = db.add_subparsers(dest="db_command", required=True)
     db_sub.add_parser("init", help="Create or upgrade the local database to the latest schema.")
     db_sub.add_parser("current", help="Show the applied migration revision.")
+    db_sub.add_parser(
+        "demo", help="Add a clearly-labelled sample course so you can try StudyForge out."
+    )
 
     args = parser.parse_args(argv)
 
@@ -73,9 +76,37 @@ def _run_db_command(command: str) -> int:
     if command == "current":
         alembic_command.current(config, verbose=True)
         return 0
+    if command == "demo":
+        return _seed_demo(settings)
 
     print(f"unknown db command {command!r}", file=sys.stderr)  # pragma: no cover
     return 2  # pragma: no cover
+
+
+def _seed_demo(settings: object) -> int:
+    from studyforge.db import create_db_engine, create_session_factory, session_scope
+    from studyforge.demo import DEMO_COURSE_NAME, seed_demo_course
+
+    engine = create_db_engine(settings)  # type: ignore[arg-type]
+    try:
+        with session_scope(create_session_factory(engine)) as session:
+            from sqlalchemy import select
+
+            from studyforge.models import Course
+
+            existing = session.scalars(
+                select(Course).where(Course.name == DEMO_COURSE_NAME)
+            ).first()
+            if existing is not None:
+                print(f"The sample course already exists (id {existing.id}). Nothing to do.")
+                return 0
+            course = seed_demo_course(session)
+            session.flush()
+            print(f"Added the sample course '{course.name}' (id {course.id}).")
+            print("It is labelled as sample data. Delete it whenever you like.")
+    finally:
+        engine.dispose()
+    return 0
 
 
 if __name__ == "__main__":

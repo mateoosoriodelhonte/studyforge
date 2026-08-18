@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}{{ heading }} — StudyForge{% endblock %}
+{% block main_class %}reading{% endblock %}
+
+{% block content %}
+<div class="empty" style="margin-top:3rem;">
+  <p class="faint tabular" style="font-size:var(--step-2);">{{ status_code }}</p>
+  <h1 style="font-size:var(--step-2);margin:0.5rem 0;">{{ heading }}</h1>
+  <p>{{ detail }}</p>
+  <div class="button-row">
+    <a class="button button--primary" href="/dashboard">Back to dashboard</a>
+  </div>
+</div>
+{% endblock %}

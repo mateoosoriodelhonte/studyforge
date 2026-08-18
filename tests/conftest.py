@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 
 from studyforge.config import AIProvider, Environment, Settings
 from studyforge.db import create_db_engine, create_session_factory
+from studyforge.fts import create_indexes
 from studyforge.main import create_app
 from studyforge.models import Base
 
@@ -52,6 +53,10 @@ def engine(settings: Settings) -> Iterator[Engine]:
     settings.ensure_directories()
     eng = create_db_engine(settings)
     Base.metadata.create_all(eng)
+    # The FTS indexes are raw DDL, not ORM metadata. Applying them from the same
+    # module the migration uses keeps the test schema honest.
+    with eng.begin() as connection:
+        create_indexes(connection)
     yield eng
     eng.dispose()
 

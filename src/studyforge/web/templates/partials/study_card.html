@@ -1,0 +1,60 @@
+{#
+  One card in the review loop.
+
+  The whole thing swaps as a unit so the reveal and the rating are separate
+  server round trips — the answer genuinely is not in the DOM until you ask for
+  it, which means you cannot cheat by reading the source.
+#}
+<article class="flashcard">
+  <div class="flashcard__face">
+    <p>{{ card.front }}</p>
+  </div>
+
+  {% if revealed %}
+  <div class="flashcard__face flashcard__answer">
+    <p>{{ card.back }}</p>
+  </div>
+  {% endif %}
+
+  <div class="flashcard__provenance">
+    <span>{{ reason_label }}</span>
+    {% if card.is_new %}<span class="badge badge--accent">New card</span>{% endif %}
+    {% if card.reps %}<span>{{ card.reps }} {{ card.reps | plural('review') }}, {{ card.lapses }} {{ card.lapses | plural('lapse') }}</span>{% endif %}
+    {% if card.source_document_id %}
+    <a href="/documents/{{ card.source_document_id }}{{ '#chunk-' ~ card.source_chunk_id if card.source_chunk_id else '' }}">
+      Where this came from
+    </a>
+    {% endif %}
+  </div>
+</article>
+
+{% if revealed %}
+<div class="rating-row" role="group" aria-label="How well did you recall this?">
+  {% for value, label, css in [(1,'Again','again'), (2,'Hard','hard'), (3,'Good','good'), (4,'Easy','easy')] %}
+  <button class="rating rating--{{ css }}"
+          data-rating="{{ value }}"
+          hx-post="/study/review"
+          hx-vals='{"card_id": {{ card.id }}, "rating": {{ value }}, "session_id": {{ session_id }}}'
+          hx-target="#study-card"
+          hx-swap="innerHTML"
+          hx-select="#study-card > *"
+          {% if value == 3 %}data-autofocus{% endif %}>
+    <span>{{ label }}</span>
+    <span class="rating__interval">{{ intervals[value] }}</span>
+    <span class="rating__key" aria-hidden="true">{{ value }}</span>
+    <span class="visually-hidden">Next review in {{ intervals[value] }}. Keyboard shortcut {{ value }}.</span>
+  </button>
+  {% endfor %}
+</div>
+{% else %}
+<div class="button-row" style="justify-content:center;margin-top:1.1rem;">
+  <button class="button button--primary button--large"
+          data-reveal
+          data-autofocus
+          hx-get="/study/reveal?card_id={{ card.id }}&session_id={{ session_id }}&position={{ position }}&total={{ total }}&reason={{ reason }}"
+          hx-target="#study-card"
+          hx-swap="innerHTML">
+    Show answer <kbd>Space</kbd>
+  </button>
+</div>
+{% endif %}

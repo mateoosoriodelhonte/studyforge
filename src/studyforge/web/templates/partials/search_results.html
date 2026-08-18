@@ -1,0 +1,30 @@
+{% if not query %}
+<p class="muted">Type to search. Results update as you go.</p>
+{% elif not groups %}
+<div class="empty">
+  <h3>No matches for “{{ query }}”</h3>
+  <p>Try a shorter or more general term. Search covers course names, document titles and text, concept names and definitions, and both sides of your flashcards.</p>
+</div>
+{% else %}
+{% for group in groups %}
+<section class="panel" style="margin-bottom:1.25rem;">
+  <div class="panel__header">
+    <h2 style="font-size:var(--step-1);">{{ group.label }}</h2>
+    <span class="faint">{{ group.results | length }} {{ group.results | length | plural('match','matches') }}</span>
+  </div>
+  <ul class="concept-list">
+    {% for result in group.results %}
+    <li class="concept">
+      <div class="concept__head">
+        <a class="concept__name" href="{{ result.url }}">{{ result.title | highlight(query) }}</a>
+        {% if result.context_label %}<span class="faint">{{ result.context_label }}</span>{% endif %}
+      </div>
+      {% if result.snippet %}
+      <p class="concept__definition">{{ result.snippet | highlight(query) }}</p>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endfor %}
+{% endif %}

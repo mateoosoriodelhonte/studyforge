@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import field, textarea_field %}
+{% block title %}{{ 'Edit course' if course else 'New course' }} — StudyForge{% endblock %}
+{% block main_class %}reading{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header__text">
+    {% if course %}
+    <p class="breadcrumb"><a href="/courses/{{ course.id }}">{{ course.name }}</a> / Edit</p>
+    {% endif %}
+    <h1>{{ 'Edit course' if course else 'New course' }}</h1>
+    <p>Courses group your notes, concepts, cards and quizzes for one subject.</p>
+  </div>
+</div>
+
+<form class="panel" method="post" action="{{ '/courses/' ~ course.id ~ '/edit' if course else '/courses/new' }}" novalidate>
+  {{ field('name', 'Course name', values.get('name'), errors, required=True, placeholder='Data Structures') }}
+  {{ field('code', 'Course code', values.get('code'), errors, hint='Optional. Shown alongside the name.', placeholder='CS 2420') }}
+  {{ textarea_field('description', 'Description', values.get('description'), errors,
+       hint='Optional. A sentence about what this course covers.', rows=4) }}
+  <div class="button-row">
+    <button type="submit" class="button button--primary">{{ 'Save changes' if course else 'Create course' }}</button>
+    <a class="button button--quiet" href="{{ '/courses/' ~ course.id if course else '/dashboard' }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

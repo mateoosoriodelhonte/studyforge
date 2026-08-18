@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import textarea_field %}
+{% block title %}{{ 'Edit card' if card else 'New card' }} — StudyForge{% endblock %}
+{% block main_class %}reading{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header__text">
+    <p class="breadcrumb"><a href="/courses/{{ course.id }}">{{ course.name }}</a> / {{ 'Edit card' if card else 'New card' }}</p>
+    <h1>{{ 'Edit card' if card else 'Write a flashcard' }}</h1>
+    <p>Keep the front to one question, and the back to one answer.</p>
+  </div>
+</div>
+
+<form class="panel" method="post"
+      action="{{ '/cards/' ~ card.id ~ '/edit' if card else '/courses/' ~ course.id ~ '/cards/new' }}" novalidate>
+  {{ textarea_field('front', 'Front (the prompt)', values.get('front'), errors, required=True, rows=4,
+      placeholder='What is an AVL tree?') }}
+  {{ textarea_field('back', 'Back (the answer)', values.get('back'), errors, required=True, rows=6,
+      placeholder='A self-balancing binary search tree...') }}
+  <div class="button-row">
+    <button type="submit" class="button button--primary">{{ 'Save changes' if card else 'Create card' }}</button>
+    <a class="button button--quiet" href="/courses/{{ course.id }}#cards">Cancel</a>
+  </div>
+</form>
+{% endblock %}

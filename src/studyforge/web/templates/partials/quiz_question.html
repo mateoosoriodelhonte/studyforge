@@ -1,0 +1,86 @@
+{# One question, swapped in place as the learner works through the quiz. #}
+<div class="study__progress">
+  <span class="tabular">Question {{ position }} of {{ total }}</span>
+  <div class="progress-track" role="progressbar"
+       aria-valuenow="{{ position - 1 }}" aria-valuemin="0" aria-valuemax="{{ total }}"
+       aria-label="Quiz progress">
+    <div class="progress-track__fill" style="width: {{ ((position - 1) / total * 100) | round }}%;"></div>
+  </div>
+</div>
+
+<section class="panel" data-announce="Question {{ position }} of {{ total }}">
+  <h2 style="font-size:var(--step-1);margin-bottom:1rem;white-space:pre-wrap;">{{ question.prompt }}</h2>
+
+  {% if feedback is none %}
+  <form hx-post="/quizzes/attempts/{{ attempt.id }}/answer"
+        hx-target="#quiz-body"
+        hx-swap="innerHTML">
+    <input type="hidden" name="question_id" value="{{ question.id }}">
+
+    {% if question.is_multiple_choice %}
+    <fieldset class="fieldset">
+      <legend class="visually-hidden">Choose one answer</legend>
+      {% for choice in question.choices %}
+      <label class="choice">
+        <input type="radio" name="response" value="{{ loop.index0 }}" required
+               {% if loop.first %}data-autofocus{% endif %}>
+        <span class="choice__key" aria-hidden="true">{{ 'ABCD'[loop.index0] }}</span>
+        <span>{{ choice }}</span>
+      </label>
+      {% endfor %}
+    </fieldset>
+    {% else %}
+    <div class="field">
+      <label for="field-response">Your answer</label>
+      <span class="field__hint" id="hint-response">
+        Answer in your own words. Grading compares text, so if it marks you
+        wrong unfairly you can say so on the next screen.
+      </span>
+      <textarea id="field-response" name="response" rows="4" required
+                data-autofocus aria-describedby="hint-response"></textarea>
+    </div>
+    {% endif %}
+
+    <div class="button-row">
+      <button type="submit" class="button button--primary">Submit answer</button>
+    </div>
+  </form>
+
+  {% else %}
+  <div class="notice notice--{{ 'success' if feedback.is_correct else 'error' }}" role="status">
+    <span class="notice__icon" aria-hidden="true">{{ '✓' if feedback.is_correct else '✗' }}</span>
+    <div>
+      <strong>{{ 'Correct' if feedback.is_correct else 'Not quite' }}</strong>
+      <p>{{ question.explanation or question.expected_answer }}</p>
+    </div>
+  </div>
+
+  {% if not feedback.is_correct and not question.is_multiple_choice %}
+  <form hx-post="/quizzes/attempts/{{ attempt.id }}/self-grade"
+        hx-target="#quiz-body" hx-swap="innerHTML" style="margin-bottom:1rem;">
+    <input type="hidden" name="question_id" value="{{ question.id }}">
+    <p class="faint" style="margin-bottom:0.5rem;">
+      Grading is a text comparison, so a correct paraphrase can be marked wrong.
+      Overriding is recorded separately and never counted as objective grading.
+    </p>
+    <button type="submit" class="button">I was actually right</button>
+  </form>
+  {% endif %}
+
+  <div class="button-row">
+    {% if next_position %}
+    <button class="button button--primary"
+            hx-get="/quizzes/attempts/{{ attempt.id }}/question/{{ next_position }}"
+            hx-target="#quiz-body" hx-swap="innerHTML" data-autofocus>
+      Next question
+    </button>
+    {% else %}
+    <button class="button button--primary"
+            hx-post="/quizzes/attempts/{{ attempt.id }}/complete"
+            hx-target="#quiz-body" hx-swap="innerHTML" data-autofocus>
+      Finish quiz
+    </button>
+    {% endif %}
+  </div>
+  {% endif %}
+</section>
