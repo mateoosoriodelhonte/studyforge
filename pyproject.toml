@@ -75,6 +75,7 @@ select = [
     "T20",           # no print
     "ARG",           # unused arguments
     "TID",           # tidy imports
+    "BLE",           # no blind except
 ]
 ignore = [
     "S101",  # assert is fine (pytest, and internal invariants)
