@@ -1,0 +1,272 @@
+{
+  "all_good_daily": [
+    {
+      "rating": 3,
+      "stability": 2.3065,
+      "difficulty": 2.118104,
+      "state": "learning",
+      "step": 1,
+      "interval_days": 0,
+      "reps": 1,
+      "lapses": 0
+    },
+    {
+      "rating": 3,
+      "stability": 7.315301,
+      "difficulty": 2.111214,
+      "state": "review",
+      "step": null,
+      "interval_days": 7,
+      "reps": 2,
+      "lapses": 0
+    },
+    {
+      "rating": 3,
+      "stability": 23.188956,
+      "difficulty": 2.104331,
+      "state": "review",
+      "step": null,
+      "interval_days": 23,
+      "reps": 3,
+      "lapses": 0
+    },
+    {
+      "rating": 3,
+      "stability": 57.371006,
+      "difficulty": 2.097455,
+      "state": "review",
+      "step": null,
+      "interval_days": 57,
+      "reps": 4,
+      "lapses": 0
+    },
+    {
+      "rating": 3,
+      "stability": 130.787243,
+      "difficulty": 2.090586,
+      "state": "review",
+      "step": null,
+      "interval_days": 131,
+      "reps": 5,
+      "lapses": 0
+    }
+  ],
+  "struggling": [
+    {
+      "rating": 1,
+      "stability": 0.212,
+      "difficulty": 6.4133,
+      "state": "learning",
+      "step": 0,
+      "interval_days": 0,
+      "reps": 1,
+      "lapses": 1
+    },
+    {
+      "rating": 1,
+      "stability": 0.083357,
+      "difficulty": 8.806304,
+      "state": "learning",
+      "step": 0,
+      "interval_days": 0,
+      "reps": 2,
+      "lapses": 2
+    },
+    {
+      "rating": 2,
+      "stability": 0.083357,
+      "difficulty": 9.192798,
+      "state": "learning",
+      "step": 0,
+      "interval_days": 0,
+      "reps": 3,
+      "lapses": 2
+    },
+    {
+      "rating": 3,
+      "stability": 0.520464,
+      "difficulty": 9.178833,
+      "state": "learning",
+      "step": 1,
+      "interval_days": 0,
+      "reps": 4,
+      "lapses": 2
+    },
+    {
+      "rating": 1,
+      "stability": 0.214555,
+      "difficulty": 9.715316,
+      "state": "learning",
+      "step": 0,
+      "interval_days": 0,
+      "reps": 5,
+      "lapses": 3
+    },
+    {
+      "rating": 3,
+      "stability": 0.685769,
+      "difficulty": 9.700829,
+      "state": "learning",
+      "step": 1,
+      "interval_days": 0,
+      "reps": 6,
+      "lapses": 3
+    }
+  ],
+  "easy_streak": [
+    {
+      "rating": 4,
+      "stability": 8.2956,
+      "difficulty": 1.0,
+      "state": "review",
+      "step": null,
+      "interval_days": 8,
+      "reps": 1,
+      "lapses": 0
+    },
+    {
+      "rating": 4,
+      "stability": 18.014945,
+      "difficulty": 1.0,
+      "state": "review",
+      "step": null,
+      "interval_days": 18,
+      "reps": 2,
+      "lapses": 0
+    },
+    {
+      "rating": 4,
+      "stability": 89.763106,
+      "difficulty": 1.0,
+      "state": "review",
+      "step": null,
+      "interval_days": 90,
+      "reps": 3,
+      "lapses": 0
+    },
+    {
+      "rating": 4,
+      "stability": 551.851703,
+      "difficulty": 1.0,
+      "state": "review",
+      "step": null,
+      "interval_days": 552,
+      "reps": 4,
+      "lapses": 0
+    }
+  ],
+  "lapse_recovery": [
+    {
+      "rating": 3,
+      "stability": 2.3065,
+      "difficulty": 2.118104,
+      "state": "learning",
+      "step": 1,
+      "interval_days": 0,
+      "reps": 1,
+      "lapses": 0
+    },
+    {
+      "rating": 3,
+      "stability": 7.315301,
+      "difficulty": 2.111214,
+      "state": "review",
+      "step": null,
+      "interval_days": 7,
+      "reps": 2,
+      "lapses": 0
+    },
+    {
+      "rating": 3,
+      "stability": 38.50102,
+      "difficulty": 2.104331,
+      "state": "review",
+      "step": null,
+      "interval_days": 39,
+      "reps": 3,
+      "lapses": 0
+    },
+    {
+      "rating": 1,
+      "stability": 2.650228,
+      "difficulty": 7.389976,
+      "state": "relearning",
+      "step": 0,
+      "interval_days": 0,
+      "reps": 4,
+      "lapses": 1
+    },
+    {
+      "rating": 3,
+      "stability": 2.650228,
+      "difficulty": 7.377814,
+      "state": "review",
+      "step": null,
+      "interval_days": 3,
+      "reps": 5,
+      "lapses": 1
+    },
+    {
+      "rating": 3,
+      "stability": 6.222716,
+      "difficulty": 7.365665,
+      "state": "review",
+      "step": null,
+      "interval_days": 6,
+      "reps": 6,
+      "lapses": 1
+    }
+  ],
+  "hard_grind": [
+    {
+      "rating": 2,
+      "stability": 1.2931,
+      "difficulty": 5.112171,
+      "state": "learning",
+      "step": 0,
+      "interval_days": 0,
+      "reps": 1,
+      "lapses": 0
+    },
+    {
+      "rating": 2,
+      "stability": 1.2931,
+      "difficulty": 6.74046,
+      "state": "learning",
+      "step": 0,
+      "interval_days": 0,
+      "reps": 2,
+      "lapses": 0
+    },
+    {
+      "rating": 2,
+      "stability": 2.708391,
+      "difficulty": 7.821393,
+      "state": "learning",
+      "step": 0,
+      "interval_days": 0,
+      "reps": 3,
+      "lapses": 0
+    },
+    {
+      "rating": 2,
+      "stability": 4.596724,
+      "difficulty": 8.538968,
+      "state": "learning",
+      "step": 0,
+      "interval_days": 0,
+      "reps": 4,
+      "lapses": 0
+    },
+    {
+      "rating": 2,
+      "stability": 7.16662,
+      "difficulty": 9.015327,
+      "state": "learning",
+      "step": 0,
+      "interval_days": 0,
+      "reps": 5,
+      "lapses": 0
+    }
+  ]
+}

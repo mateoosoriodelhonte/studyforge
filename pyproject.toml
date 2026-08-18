@@ -85,6 +85,8 @@ ignore = [
 "tests/**" = ["S105", "S106", "ARG001", "ARG002"]
 "migrations/**" = ["N999", "ARG001"]
 "src/studyforge/cli.py" = ["T20"]
+# Operator-facing verification tools; their entire output is stdout.
+"scripts/**" = ["T20"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["studyforge"]
