@@ -1279,7 +1279,7 @@ requires-dist = [
     { name = "pypdf", specifier = ">=5.1" },
     { name = "python-multipart", specifier = ">=0.0.18" },
     { name = "sqlalchemy", specifier = ">=2.0.36" },
-    { name = "uvicorn", extras = ["standard"], specifier = ">=0.32" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.52.3" },
 ]
 
 [package.metadata.requires-dev]
