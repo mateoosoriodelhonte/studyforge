@@ -20,6 +20,7 @@ jobs:
   quality:
     name: Lint, types & tests
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
 
@@ -58,6 +59,7 @@ jobs:
   migrations:
     name: Migrations on a clean database
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v7
@@ -91,6 +93,7 @@ jobs:
   e2e:
     name: Browser end-to-end
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v7
@@ -101,13 +104,24 @@ jobs:
       - run: uv sync --group dev --group e2e --locked
 
       - name: Cache Playwright browsers
+        id: playwright-cache
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('uv.lock') }}
 
-      - name: Install Chromium
+      # `--with-deps` shells out to apt every time, even when the browser is
+      # already cached — and an Ubuntu mirror stalling there once hung this job
+      # for half an hour. Only touch apt when the browser actually needs
+      # downloading; the job timeout catches it if that stalls too.
+      - name: Install Chromium and its system dependencies
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        timeout-minutes: 10
         run: uv run playwright install --with-deps chromium
+
+      - name: Install Chromium (cached)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: uv run playwright install chromium
 
       - name: Run the critical-path tests
         run: uv run pytest tests/e2e -v
@@ -115,6 +129,7 @@ jobs:
   docker:
     name: Container image
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
 
@@ -139,6 +154,7 @@ jobs:
   security:
     name: Dependency advisories
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v7

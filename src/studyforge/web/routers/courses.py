@@ -332,6 +332,110 @@ async def delete_document(
     return _redirect(f"/courses/{course_id}")
 
 
+# -------------------------------------------------------------------- concepts
+#
+# Extraction produces *candidates*; these routes are how a learner corrects
+# them. The course page tells the user they can edit or delete anything that is
+# wrong, so the ability has to exist.
+
+
+@router.get("/courses/{course_id}/concepts/new")
+async def new_concept_form(request: Request, session: SessionDep, course_id: int) -> Any:
+    return render(
+        templates,
+        request,
+        "concept_form.html",
+        {
+            "course": course_service.get_course(session, course_id),
+            "concept": None,
+            "values": {},
+            "errors": {},
+        },
+    )
+
+
+@router.post("/courses/{course_id}/concepts/new")
+async def create_concept(
+    request: Request,
+    session: SessionDep,
+    course_id: int,
+    name: FormStr = "",
+    definition: OptionalFormStr = "",
+) -> Any:
+    try:
+        concept_service.create_concept(
+            session, course_id=course_id, name=name, definition=definition
+        )
+    except ValidationError as error:
+        return render(
+            templates,
+            request,
+            "concept_form.html",
+            {
+                "course": course_service.get_course(session, course_id),
+                "concept": None,
+                "values": {"name": name, "definition": definition},
+                "errors": error.field_errors,
+            },
+            status_code=422,
+        )
+    flash(request, f"Added the concept {name.strip()!r}.", "success")
+    return _redirect(f"/courses/{course_id}")
+
+
+@router.get("/concepts/{concept_id}/edit")
+async def edit_concept_form(request: Request, session: SessionDep, concept_id: int) -> Any:
+    concept = concept_service.get_concept(session, concept_id)
+    return render(
+        templates,
+        request,
+        "concept_form.html",
+        {
+            "course": course_service.get_course(session, concept.course_id),
+            "concept": concept,
+            "values": {"name": concept.name, "definition": concept.definition},
+            "errors": {},
+        },
+    )
+
+
+@router.post("/concepts/{concept_id}/edit")
+async def update_concept(
+    request: Request,
+    session: SessionDep,
+    concept_id: int,
+    name: FormStr = "",
+    definition: OptionalFormStr = "",
+) -> Any:
+    concept = concept_service.get_concept(session, concept_id)
+    try:
+        concept_service.update_concept(session, concept_id, name=name, definition=definition)
+    except ValidationError as error:
+        return render(
+            templates,
+            request,
+            "concept_form.html",
+            {
+                "course": course_service.get_course(session, concept.course_id),
+                "concept": concept,
+                "values": {"name": name, "definition": definition},
+                "errors": error.field_errors,
+            },
+            status_code=422,
+        )
+    flash(request, "Concept updated.", "success")
+    return _redirect(f"/courses/{concept.course_id}")
+
+
+@router.post("/concepts/{concept_id}/delete")
+async def delete_concept(request: Request, session: SessionDep, concept_id: int) -> Any:
+    concept = concept_service.get_concept(session, concept_id)
+    course_id = concept.course_id
+    concept_service.delete_concept(session, concept_id)
+    flash(request, "Concept deleted. Cards made from it were kept.", "info")
+    return _redirect(f"/courses/{course_id}")
+
+
 # ------------------------------------------------------------------ flashcards
 
 

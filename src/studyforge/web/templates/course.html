@@ -68,17 +68,19 @@
   <section class="panel">
     <div class="panel__header">
       <h2>Concepts</h2>
-      <span class="faint">{{ concepts | length }} shown</span>
+      <a class="button button--quiet" href="/courses/{{ course.id }}/concepts/new">Add</a>
     </div>
     {% if concepts %}
     <p class="faint" style="margin-bottom:0.75rem;">
-      Extracted by pattern matching, not comprehension. Edit or delete anything that is wrong.
+      Extracted by pattern matching, not comprehension.
+      <a href="/courses/{{ course.id }}/concepts/new">Add one</a>, or select any
+      concept below to edit or delete it.
     </p>
     <ul class="concept-list">
       {% for item in concepts[:12] %}
       <li class="concept">
         <div class="concept__head">
-          <span class="concept__name">{{ item.concept.name }}</span>
+          <a class="concept__name" href="/concepts/{{ item.concept.id }}/edit">{{ item.concept.name }}</a>
           {{ badge(item.concept.extraction_method.value | replace('_',' '), 'neutral') }}
           {% if item.assessment %}{{ concept_status(item.assessment.status.value, item.assessment.status_definition) }}{% endif %}
         </div>
