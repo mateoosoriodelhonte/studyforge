@@ -44,7 +44,7 @@ semantic boundaries: headings, then paragraphs, then sentences.
 **Extract** — concepts are found from evidence actually present in the text:
 definition sentences, glossary lines, headings, and repeated terms, each scored
 by how much that evidence proves. This is pattern matching, not comprehension,
-and the UI presents concepts as candidates you can edit.
+so every concept is editable and deletable, and the UI says so.
 
 **Generate** — flashcards and quizzes from those concepts, deterministically.
 The quality bar is *fewer, defensible items over more, weak ones*: a concept
@@ -228,7 +228,7 @@ across 4,096 review transitions before being frozen.
 ## Tests
 
 ```bash
-uv run pytest                       # 676 unit, integration and security tests
+uv run pytest                       # 695 unit, integration and security tests
 uv run pytest --cov                 # with coverage
 uv run --group e2e pytest tests/e2e # 15 browser tests (needs `playwright install chromium`)
 uv run ruff check . && uv run mypy  # lint and types
@@ -262,6 +262,8 @@ uv run --with fsrs python scripts/verify_fsrs_against_reference.py
 | **Dashboard** — what is due, and what needs work | **Course** — documents, concepts, cards, quizzes |
 | ![Document](docs/screenshots/document.png) | ![Settings](docs/screenshots/settings.png) |
 | **Document** — extraction, chunks, provenance | **Settings** — what is active, and what it means for privacy |
+| ![Ask my notes](docs/screenshots/ask.png) | ![Study on mobile](docs/screenshots/study-mobile.png) |
+| **Ask my notes** — retrieval from your own material, working with no AI | **Mobile** — the study view, where studying actually happens |
 
 All screenshots use the built-in sample data.
 

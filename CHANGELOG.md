@@ -35,7 +35,9 @@ with FSRS-6 spaced repetition — all working with no AI configured.
   page-artefact removal, then splitting at headings, paragraphs and sentences
   with character offsets preserved for provenance ([#4])
 - **Deterministic concept extraction** from definition sentences, glossary
-  lines, headings and repeated terms, each scored by evidence strength ([#5])
+  lines, headings and repeated terms, each scored by evidence strength, with
+  full manual editing because extraction is pattern matching, not
+  understanding ([#5])
 - **Deterministic flashcard and quiz generation**, producing fewer defensible
   items rather than more weak ones. Multiple-choice questions are only built
   when the course can supply genuinely plausible distractors ([#8], [#10])
@@ -71,7 +73,7 @@ with FSRS-6 spaced repetition — all working with no AI configured.
 
 ### Quality
 
-- 676 unit, integration and security tests, plus 15 Playwright browser tests
+- 695 unit, integration and security tests, plus 15 Playwright browser tests
 - CI running format, lint, `mypy --strict`, tests, migrations on a clean
   database, browser tests and a dependency advisory scan ([#1], [#17])
 - Security hardening across uploads, path handling, template escaping, SQL

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import field, textarea_field %}
+{% block title %}{{ 'Edit concept' if concept else 'New concept' }} — StudyForge{% endblock %}
+{% block main_class %}reading{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header__text">
+    <p class="breadcrumb"><a href="/courses/{{ course.id }}">{{ course.name }}</a> / {{ 'Edit concept' if concept else 'New concept' }}</p>
+    <h1>{{ 'Edit concept' if concept else 'Add a concept' }}</h1>
+    <p>
+      {% if concept and concept.extraction_method.value != 'manual' %}
+      This was extracted automatically from your notes. Correcting it is
+      expected — extraction is pattern matching, not understanding.
+      {% else %}
+      Concepts are what cards and quiz questions are generated from. A concept
+      with a definition can produce study material; one without cannot.
+      {% endif %}
+    </p>
+  </div>
+</div>
+
+{% if concept and concept.source_document_id %}
+{# Written out rather than passed through the notice macro, so no template
+   anywhere in StudyForge needs `|safe`. #}
+<div class="notice notice--info" role="note">
+  <span class="notice__icon" aria-hidden="true">i</span>
+  <div>
+    <strong>Where this came from</strong>
+    <p><a href="/documents/{{ concept.source_document_id }}">The source document</a>.</p>
+  </div>
+</div>
+{% endif %}
+
+<form class="panel" method="post"
+      action="{{ '/concepts/' ~ concept.id ~ '/edit' if concept else '/courses/' ~ course.id ~ '/concepts/new' }}"
+      novalidate>
+  {{ field('name', 'Concept name', values.get('name'), errors, required=True,
+       hint='The term as you want to see it. Must be unique within this course.',
+       placeholder='AVL tree') }}
+  {{ textarea_field('definition', 'Definition', values.get('definition'), errors, rows=5,
+       hint='Optional, but a concept without one cannot generate a flashcard.',
+       placeholder='A self-balancing binary search tree that...') }}
+  <div class="button-row">
+    <button type="submit" class="button button--primary">{{ 'Save changes' if concept else 'Add concept' }}</button>
+    <a class="button button--quiet" href="/courses/{{ course.id }}">Cancel</a>
+    {% if concept %}
+    <button type="submit" class="button button--danger"
+            formaction="/concepts/{{ concept.id }}/delete" formnovalidate
+            onclick="return confirm('Delete this concept? Cards already made from it are kept.');">
+      Delete
+    </button>
+    {% endif %}
+  </div>
+</form>
+{% endblock %}

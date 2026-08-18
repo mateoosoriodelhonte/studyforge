@@ -30,6 +30,7 @@ SHOTS: list[tuple[str, str, dict[str, int], str, str | None]] = [
     ("progress.png", "/progress", DESKTOP, "dark", None),
     ("document.png", "/documents/1", DESKTOP, "light", None),
     ("settings.png", "/settings", DESKTOP, "light", None),
+    ("ask.png", "/ask", DESKTOP, "light", "ask"),
     ("study-mobile.png", "/study", MOBILE, "dark", "reveal"),
 ]
 
@@ -51,6 +52,10 @@ def main() -> int:
                 if button is not None:
                     button.click()
                     page.wait_for_selector(".rating-row", timeout=5_000)
+            elif action == "ask":
+                page.fill("#field-question", "Why are AVL tree operations logarithmic?")
+                page.click("button[type=submit]")
+                page.wait_for_selector("text=From your notes", timeout=5_000)
 
             page.screenshot(path=str(OUTPUT / name))
             print(f"captured {name}")
