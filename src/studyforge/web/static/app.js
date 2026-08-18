@@ -12,6 +12,19 @@
   /** Keys 1–4 map to the four FSRS ratings, matching the button labels. */
   var RATING_KEYS = { 1: "1", 2: "2", 3: "3", 4: "4" };
 
+  /**
+   * Whether the answer is currently showing.
+   *
+   * Read from the DOM rather than from a data attribute: HTMX swaps the card in
+   * without touching the container, so any flag set at render time goes stale
+   * the moment the first reveal happens — which silently broke every keyboard
+   * rating. The rating buttons only exist once the answer is visible, so their
+   * presence *is* the state.
+   */
+  function isRevealed(scope) {
+    return scope.querySelector("[data-rating]") !== null;
+  }
+
   function isTyping(target) {
     if (!target) return false;
     var tag = target.tagName;
@@ -45,8 +58,10 @@
 
     var study = document.querySelector("[data-study-session]");
     if (study) {
+      var revealed = isRevealed(study);
+
       // Space or Enter reveals the answer.
-      if ((event.key === " " || event.key === "Enter") && !study.dataset.revealed) {
+      if ((event.key === " " || event.key === "Enter") && !revealed) {
         var reveal = study.querySelector("[data-reveal]");
         if (reveal) {
           event.preventDefault();
@@ -55,7 +70,7 @@
         }
       }
 
-      if (RATING_KEYS[event.key] && study.dataset.revealed) {
+      if (RATING_KEYS[event.key] && revealed) {
         var button = study.querySelector('[data-rating="' + event.key + '"]');
         if (button) {
           event.preventDefault();

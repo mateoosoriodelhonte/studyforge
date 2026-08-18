@@ -53,10 +53,15 @@
 <div class="field">
   <label for="field-{{ name }}">{{ label }}{% if required %} <span aria-hidden="true">*</span><span class="visually-hidden">(required)</span>{% endif %}</label>
   {% if hint %}<span class="field__hint" id="hint-{{ name }}">{{ hint }}</span>{% endif %}
+  {#
+    The trailing spaces inside each conditional are load-bearing. With
+    trim_blocks and lstrip_blocks on, omitting them renders
+    `requiredaria-invalid="true"` as a single attribute name, which silently
+    destroys the accessibility wiring. Caught by a browser test, not by reading.
+  #}
   <input type="{{ type }}" id="field-{{ name }}" name="{{ name }}" value="{{ value or '' }}"
          placeholder="{{ placeholder }}"
-         {% if required %}required{% endif %}
-         {% if has_error %}aria-invalid="true"{% endif %}
+         {% if required %}required {% endif %}{% if has_error %}aria-invalid="true" {% endif %}
          aria-describedby="{{ ('hint-' ~ name ~ ' ') if hint else '' }}{{ ('error-' ~ name) if has_error else '' }}">
   {% if has_error %}
   <p class="field__error" id="error-{{ name }}">{{ errors[name] }}</p>
@@ -71,8 +76,7 @@
   {% if hint %}<span class="field__hint" id="hint-{{ name }}">{{ hint }}</span>{% endif %}
   <textarea id="field-{{ name }}" name="{{ name }}" rows="{{ rows }}"
             placeholder="{{ placeholder }}"
-            {% if required %}required{% endif %}
-            {% if has_error %}aria-invalid="true"{% endif %}
+            {% if required %}required {% endif %}{% if has_error %}aria-invalid="true" {% endif %}
             aria-describedby="{{ ('hint-' ~ name ~ ' ') if hint else '' }}{{ ('error-' ~ name) if has_error else '' }}">{{ value or '' }}</textarea>
   {% if has_error %}
   <p class="field__error" id="error-{{ name }}">{{ errors[name] }}</p>

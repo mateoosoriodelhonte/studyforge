@@ -114,7 +114,10 @@ module = ["tests.*", "migrations.*"]
 ignore_errors = true
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+# The browser tests are excluded from the default run: they need a live server
+# and an installed Chromium, and they are an order of magnitude slower. Run them
+# explicitly with `pytest tests/e2e`; CI runs them as their own job.
+testpaths = ["tests/unit", "tests/integration", "tests/security"]
 addopts = "-q --strict-markers --strict-config"
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"

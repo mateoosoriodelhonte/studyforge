@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Ask my notes — StudyForge{% endblock %}
+{% block main_class %}reading{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header__text">
+    <h1>Ask my notes</h1>
+    <p>
+      Searches the passages you have added and shows what it finds. With an AI
+      provider configured it will also explain them — using only those passages,
+      and citing them.
+    </p>
+  </div>
+</div>
+
+<form class="panel" style="margin-bottom:1.5rem;"
+      hx-post="/ask" hx-target="#ask-answer" hx-swap="innerHTML"
+      hx-indicator="#ask-spinner">
+  <div class="field" style="margin-bottom:0.75rem;">
+    <label for="field-question">Your question</label>
+    <span class="field__hint" id="hint-question">
+      Answers come only from material you have added. StudyForge will not make
+      something up to fill a gap.
+    </span>
+    <input type="text" id="field-question" name="question" value="{{ question or '' }}"
+           autocomplete="off" autofocus aria-describedby="hint-question"
+           placeholder="Why are AVL tree operations O(log n)?">
+  </div>
+  <div class="button-row">
+    <button type="submit" class="button button--primary">Ask</button>
+    <span id="ask-spinner" class="htmx-indicator faint">Searching your notes…</span>
+  </div>
+</form>
+
+<div id="ask-answer" aria-live="polite" data-announce="Answer ready">
+  {% include "partials/ask_answer.html" %}
+</div>
+{% endblock %}

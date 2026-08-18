@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, Form, Query, Request
 from sqlalchemy import select
 
 from studyforge import __version__
@@ -21,6 +21,7 @@ from studyforge.domain.study.weakness import (
     weakest_concepts,
 )
 from studyforge.models import Course, StudySession
+from studyforge.services import ask as ask_service
 from studyforge.services import courses as course_service
 from studyforge.services import progress as progress_service
 from studyforge.services import search as search_service
@@ -176,6 +177,27 @@ async def search_page(request: Request, session: SessionDep, q: str = Query(defa
             "groups": search_service.search(session, q) if q else [],
         },
     )
+
+
+@router.get("/ask")
+async def ask_page(request: Request, q: str = Query(default="")) -> Any:
+    return render(
+        templates, request, "ask.html", {"active_nav": "ask", "question": q, "answer": None}
+    )
+
+
+@router.post("/ask")
+async def ask_submit(
+    request: Request,
+    session: SessionDep,
+    settings: SettingsDep,
+    question: Annotated[str, Form()] = "",
+    course_id: Annotated[int | None, Form()] = None,
+) -> Any:
+    answer = await ask_service.ask(
+        session, build_provider(settings), question=question, course_id=course_id
+    )
+    return render(templates, request, "partials/ask_answer.html", {"answer": answer})
 
 
 @router.get("/search/results")
