@@ -1,6 +1,6 @@
 [project]
 name = "studyforge"
-version = "0.1.0"
+version = "1.0.0"
 description = "A local-first intelligent study system: ingest notes, extract concepts, and drill them with FSRS-6 spaced repetition."
 readme = "README.md"
 requires-python = ">=3.12"
