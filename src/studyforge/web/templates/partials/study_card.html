@@ -37,7 +37,6 @@
           hx-vals='{"card_id": {{ card.id }}, "rating": {{ value }}, "session_id": {{ session_id }}}'
           hx-target="#study-card"
           hx-swap="innerHTML"
-          hx-select="#study-card > *"
           {% if value == 3 %}data-autofocus{% endif %}>
     <span>{{ label }}</span>
     <span class="rating__interval">{{ intervals[value] }}</span>

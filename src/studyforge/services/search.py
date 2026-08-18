@@ -27,6 +27,95 @@ from sqlalchemy.orm import Session
 
 ResultKind = Literal["course", "document", "concept", "flashcard"]
 
+#: Words stripped from a natural-language question before retrieval. Not a
+#: general stoplist -- just the interrogatives and function words that appear
+#: in questions but almost never in the notes being searched.
+QUESTION_WORDS = frozenset(
+    [
+        "what",
+        "why",
+        "how",
+        "when",
+        "where",
+        "which",
+        "who",
+        "whom",
+        "whose",
+        "is",
+        "are",
+        "was",
+        "were",
+        "be",
+        "been",
+        "being",
+        "do",
+        "does",
+        "did",
+        "done",
+        "can",
+        "could",
+        "should",
+        "would",
+        "will",
+        "shall",
+        "may",
+        "might",
+        "must",
+        "a",
+        "an",
+        "the",
+        "of",
+        "in",
+        "on",
+        "at",
+        "to",
+        "for",
+        "from",
+        "by",
+        "with",
+        "about",
+        "into",
+        "over",
+        "under",
+        "and",
+        "or",
+        "but",
+        "if",
+        "then",
+        "than",
+        "that",
+        "this",
+        "these",
+        "those",
+        "it",
+        "its",
+        "as",
+        "so",
+        "such",
+        "i",
+        "me",
+        "my",
+        "we",
+        "our",
+        "you",
+        "your",
+        "they",
+        "them",
+        "their",
+        "he",
+        "she",
+        "his",
+        "her",
+        "tell",
+        "explain",
+        "describe",
+        "give",
+        "show",
+        "me",
+        "please",
+    ]
+)
+
 #: Per-kind cap, so one very common word cannot flood the page.
 DEFAULT_LIMIT = 12
 
@@ -82,6 +171,33 @@ def to_match_query(raw: str) -> str | None:
     # without "bin" matching nothing until they finish the word.
     quoted.append(f'"{tokens[-1]}"*')
     return " AND ".join(quoted)
+
+
+def to_retrieval_query(raw: str) -> str | None:
+    """Turn a natural-language *question* into an FTS5 expression.
+
+    Different from :func:`to_match_query` on purpose. Search-as-you-type wants
+    implicit AND: every word you type should narrow the results. A question does
+    the opposite -- "Why are AVL tree operations logarithmic?" contains four
+    words the notes will never contain, and ANDing them finds nothing.
+
+    So: drop the interrogatives and function words, then OR what remains and let
+    FTS5's ``rank`` order by relevance. A passage matching three content words
+    outranks one matching a single word, which is the behaviour that makes
+    retrieval useful.
+    """
+    if not raw or not raw.strip():
+        return None
+    cleaned = _FTS_SPECIAL.sub(" ", raw)
+    tokens = [
+        token
+        for token in _TOKEN.findall(cleaned)
+        if token.lower() not in QUESTION_WORDS and len(token) > 1
+    ]
+    if not tokens:
+        # A question made entirely of function words has nothing to retrieve on.
+        return None
+    return " OR ".join(f'"{token}"' for token in tokens[:12])
 
 
 def search(
@@ -242,9 +358,22 @@ def _search_flashcards(
     )
 
 
+@dataclass(frozen=True, slots=True)
+class RetrievedChunk:
+    """A passage retrieved to answer a question."""
+
+    chunk_id: int
+    text: str
+    heading: str | None
+    ordinal: int
+    document_id: int
+    document_title: str
+    course_id: int
+
+
 def retrieve_chunks(
     session: Session, raw_query: str, *, course_id: int | None = None, limit: int = 5
-) -> list[dict[str, object]]:
+) -> list[RetrievedChunk]:
     """Retrieve document passages relevant to a question.
 
     The retrieval half of "ask my notes". Deliberately separate from any
@@ -252,7 +381,7 @@ def retrieve_chunks(
     provider *is* configured these passages are the only thing it is allowed to
     answer from.
     """
-    match = to_match_query(raw_query)
+    match = to_retrieval_query(raw_query)
     if match is None:
         return []
     rows = session.execute(
@@ -272,14 +401,14 @@ def retrieve_chunks(
         {"match": match, "course_id": course_id, "limit": limit},
     ).all()
     return [
-        {
-            "chunk_id": row.id,
-            "text": row.text,
-            "heading": row.heading,
-            "ordinal": row.ordinal,
-            "document_id": row.document_id,
-            "document_title": row.document_title,
-            "course_id": row.course_id,
-        }
+        RetrievedChunk(
+            chunk_id=row.id,
+            text=row.text,
+            heading=row.heading,
+            ordinal=row.ordinal,
+            document_id=row.document_id,
+            document_title=row.document_title,
+            course_id=row.course_id,
+        )
         for row in rows
     ]
