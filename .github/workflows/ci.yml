@@ -112,6 +112,30 @@ jobs:
       - name: Run the critical-path tests
         run: uv run pytest tests/e2e -v
 
+  docker:
+    name: Container image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build the image
+        run: docker build -t studyforge:ci .
+
+      - name: It starts, migrates and serves
+        run: |
+          docker run -d --name studyforge-ci -p 8000:8000 studyforge:ci
+          for _ in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:8000/healthz; then
+              echo
+              docker rm -f studyforge-ci
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "the container did not become healthy in time" >&2
+          docker logs studyforge-ci
+          exit 1
+
   security:
     name: Dependency advisories
     runs-on: ubuntu-latest
