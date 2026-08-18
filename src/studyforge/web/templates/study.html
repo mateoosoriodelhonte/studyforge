@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import empty_state %}
+{% block title %}Study — StudyForge{% endblock %}
+
+{% block content %}
+<div class="study" data-study-session {% if revealed %}data-revealed="true"{% endif %}>
+  {% if card %}
+  <div class="study__progress">
+    <span class="tabular">{{ position }} of {{ total }}</span>
+    <div class="progress-track" role="progressbar"
+         aria-valuenow="{{ position - 1 }}" aria-valuemin="0" aria-valuemax="{{ total }}"
+         aria-label="Session progress">
+      <div class="progress-track__fill" style="width: {{ ((position - 1) / total * 100) | round }}%;"></div>
+    </div>
+    <a class="button button--quiet" href="/study/end?session_id={{ session_id }}" data-end-session>
+      Finish <kbd>Esc</kbd>
+    </a>
+  </div>
+
+  <div id="study-card" data-announce="Next card">
+    {% include "partials/study_card.html" %}
+  </div>
+
+  <p class="faint" style="margin-top:1.25rem;text-align:center;">
+    <kbd>Space</kbd> reveal &middot; <kbd>1</kbd> again &middot; <kbd>2</kbd> hard &middot;
+    <kbd>3</kbd> good &middot; <kbd>4</kbd> easy &middot; <kbd>Esc</kbd> finish
+  </p>
+
+  {% else %}
+  <div class="page-header">
+    <div class="page-header__text">
+      <h1>Today's study session</h1>
+    </div>
+  </div>
+  {{ empty_state(
+      'Nothing due right now',
+      'Every card in this queue is scheduled for later. That is the system working — come back when something is due, or add more material.',
+      'Back to dashboard', '/dashboard') }}
+  {% endif %}
+</div>
+{% endblock %}

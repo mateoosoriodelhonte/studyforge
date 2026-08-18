@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Search — StudyForge{% endblock %}
+{% block main_class %}reading{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header__text">
+    <h1>Search</h1>
+    <p>Across courses, documents, concepts and flashcards. Press <kbd>/</kbd> anywhere to jump here.</p>
+  </div>
+</div>
+
+<form class="panel" style="margin-bottom:1.5rem;" role="search"
+      hx-get="/search/results" hx-target="#search-results" hx-swap="innerHTML"
+      hx-trigger="input changed delay:250ms from:#field-q, submit">
+  <div class="field" style="margin-bottom:0;">
+    <label for="field-q">What are you looking for?</label>
+    <input type="search" id="field-q" name="q" value="{{ query or '' }}"
+           data-search-input autocomplete="off" autofocus
+           placeholder="binary search tree">
+  </div>
+  <noscript>
+    <div class="button-row" style="margin-top:0.75rem;">
+      <button type="submit" class="button button--primary">Search</button>
+    </div>
+  </noscript>
+</form>
+
+<div id="search-results" aria-live="polite" data-announce="Search results updated">
+  {% include "partials/search_results.html" %}
+</div>
+{% endblock %}

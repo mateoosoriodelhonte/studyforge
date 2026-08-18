@@ -90,6 +90,10 @@ ignore = [
 "scripts/**" = ["T20"]
 # RUF001 flags "ambiguous" Unicode characters. Folding exactly those characters
 # is what this module is for, and the tests must contain the real ones.
+# S608 flags interpolating identifiers into SQL. SQL identifiers cannot be
+# bound as parameters, and every value interpolated in this module comes from a
+# module-level constant — no user input reaches it. See the module docstring.
+"src/studyforge/fts.py" = ["S608"]
 "src/studyforge/domain/text/normalize.py" = ["RUF001"]
 "tests/unit/test_normalize.py" = ["RUF001"]
 

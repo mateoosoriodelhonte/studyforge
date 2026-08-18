@@ -1,0 +1,109 @@
+{#
+  Shared markup. Kept as macros rather than includes so each one has an explicit
+  signature — a template that renders a stat cannot silently depend on some
+  ambient context variable.
+#}
+
+{% macro stat(value, label, sample=None, attention=False) %}
+<div class="stat {% if attention and value %}stat--attention{% endif %}">
+  <span class="stat__value tabular">{{ value }}</span>
+  <span class="stat__label">{{ label }}</span>
+  {% if sample %}<span class="stat__sample">{{ sample }}</span>{% endif %}
+</div>
+{% endmacro %}
+
+{#
+  A rate is rendered from its numerator and denominator together so a
+  percentage can never appear without its sample size being available.
+#}
+{% macro rate_stat(rate, label) %}
+<div class="stat">
+  <span class="stat__value tabular">
+    {%- if rate.has_data %}{{ rate.percent }}%{% else %}—{% endif -%}
+  </span>
+  <span class="stat__label">{{ label }}</span>
+  <span class="stat__sample">
+    {%- if rate.has_data -%}
+      from {{ rate.denominator }} {{ rate.denominator | plural('answer') }}
+    {%- else -%}
+      no data yet
+    {%- endif -%}
+  </span>
+</div>
+{% endmacro %}
+
+{% macro badge(text, tone='neutral', title=None) %}
+<span class="badge badge--{{ tone }}"{% if title %} title="{{ title }}"{% endif %}>{{ text }}</span>
+{% endmacro %}
+
+{% macro empty_state(heading, body, action_label=None, action_href=None) %}
+<div class="empty">
+  <h3>{{ heading }}</h3>
+  <p>{{ body }}</p>
+  {% if action_label and action_href %}
+  <div class="button-row">
+    <a class="button button--primary" href="{{ action_href }}">{{ action_label }}</a>
+  </div>
+  {% endif %}
+</div>
+{% endmacro %}
+
+{% macro field(name, label, value='', errors={}, type='text', hint=None, required=False, placeholder='') %}
+{% set has_error = name in errors %}
+<div class="field">
+  <label for="field-{{ name }}">{{ label }}{% if required %} <span aria-hidden="true">*</span><span class="visually-hidden">(required)</span>{% endif %}</label>
+  {% if hint %}<span class="field__hint" id="hint-{{ name }}">{{ hint }}</span>{% endif %}
+  <input type="{{ type }}" id="field-{{ name }}" name="{{ name }}" value="{{ value or '' }}"
+         placeholder="{{ placeholder }}"
+         {% if required %}required{% endif %}
+         {% if has_error %}aria-invalid="true"{% endif %}
+         aria-describedby="{{ ('hint-' ~ name ~ ' ') if hint else '' }}{{ ('error-' ~ name) if has_error else '' }}">
+  {% if has_error %}
+  <p class="field__error" id="error-{{ name }}">{{ errors[name] }}</p>
+  {% endif %}
+</div>
+{% endmacro %}
+
+{% macro textarea_field(name, label, value='', errors={}, hint=None, required=False, rows=10, placeholder='') %}
+{% set has_error = name in errors %}
+<div class="field">
+  <label for="field-{{ name }}">{{ label }}{% if required %} <span aria-hidden="true">*</span><span class="visually-hidden">(required)</span>{% endif %}</label>
+  {% if hint %}<span class="field__hint" id="hint-{{ name }}">{{ hint }}</span>{% endif %}
+  <textarea id="field-{{ name }}" name="{{ name }}" rows="{{ rows }}"
+            placeholder="{{ placeholder }}"
+            {% if required %}required{% endif %}
+            {% if has_error %}aria-invalid="true"{% endif %}
+            aria-describedby="{{ ('hint-' ~ name ~ ' ') if hint else '' }}{{ ('error-' ~ name) if has_error else '' }}">{{ value or '' }}</textarea>
+  {% if has_error %}
+  <p class="field__error" id="error-{{ name }}">{{ errors[name] }}</p>
+  {% endif %}
+</div>
+{% endmacro %}
+
+{% macro notice(body, tone='info', heading=None) %}
+<div class="notice notice--{{ tone }}" role="{{ 'alert' if tone == 'error' else 'note' }}">
+  <span class="notice__icon" aria-hidden="true">{{ {'success':'✓','error':'!','warning':'▲','info':'i'}.get(tone,'i') }}</span>
+  <div>
+    {% if heading %}<strong>{{ heading }}</strong>{% endif %}
+    <p>{{ body }}</p>
+  </div>
+</div>
+{% endmacro %}
+
+{% macro document_status(document) %}
+{% if document.status.value == 'extracted' %}
+  {{ badge('Ready', 'success', 'Text extracted and chunked') }}
+{% elif document.status.value == 'no_text' %}
+  {{ badge('No text', 'warning', 'No readable text could be extracted') }}
+{% elif document.status.value == 'failed' %}
+  {{ badge('Failed', 'danger', document.extraction_error or 'Extraction failed') }}
+{% else %}
+  {{ badge('Pending', 'neutral') }}
+{% endif %}
+{% endmacro %}
+
+{% macro concept_status(status, definition) %}
+{% set tones = {'strong':'success','developing':'accent','needs_work':'danger','not_enough_data':'neutral'} %}
+{% set labels = {'strong':'Strong','developing':'Developing','needs_work':'Needs work','not_enough_data':'Not enough data'} %}
+{{ badge(labels.get(status, status), tones.get(status, 'neutral'), definition) }}
+{% endmacro %}

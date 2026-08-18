@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import badge, notice %}
+{% block title %}Settings — StudyForge{% endblock %}
+{% block main_class %}reading{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header__text">
+    <h1>Settings and privacy</h1>
+    <p>StudyForge is configured through environment variables, so this page shows what is active rather than editing it. See <code>.env.example</code>.</p>
+  </div>
+</div>
+
+<section class="panel" style="margin-bottom:1.5rem;">
+  <div class="panel__header">
+    <h2>AI provider</h2>
+    {% if ai.provider == 'none' %}
+      {{ badge('Off', 'neutral') }}
+    {% elif ai.reachable %}
+      {{ badge('Connected', 'success') }}
+    {% else %}
+      {{ badge('Unreachable', 'warning') }}
+    {% endif %}
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <caption class="visually-hidden">Active AI configuration</caption>
+      <tbody>
+        <tr><th scope="row">Provider</th><td><code>{{ ai.provider }}</code></td></tr>
+        {% if ai.provider != 'none' %}
+        <tr><th scope="row">Model</th><td><code>{{ ai.model }}</code></td></tr>
+        <tr><th scope="row">Endpoint</th><td><code>{{ ai.endpoint }}</code></td></tr>
+        <tr><th scope="row">Status</th><td>{{ ai.status_detail }}</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if ai.provider == 'none' %}
+  {{ notice(
+      'No AI is configured, and StudyForge is fully functional this way. Concept extraction, card generation, quiz generation and all scheduling are deterministic and run locally. Nothing you add here leaves this machine.',
+      'success', 'Everything stays local') }}
+  {% elif ai.provider == 'ollama' %}
+  {{ notice(
+      'Ollama runs on your own machine, so study content is sent to ' ~ ai.endpoint ~ ' and no further. Nothing reaches the internet.',
+      'success', 'Local inference') }}
+  {% if not ai.reachable %}
+  {{ notice(
+      'Ollama is configured but not responding. StudyForge falls back to its deterministic path — nothing is broken, you just will not get AI-assisted generation until it is running.',
+      'warning', 'Not currently reachable') }}
+  {% endif %}
+  {% endif %}
+</section>
+
+<section class="panel" style="margin-bottom:1.5rem;">
+  <div class="panel__header"><h2>Where your data lives</h2></div>
+  <div class="table-wrap">
+    <table>
+      <caption class="visually-hidden">Storage locations</caption>
+      <tbody>
+        <tr><th scope="row">Database</th><td><code>{{ storage.database }}</code></td></tr>
+        <tr><th scope="row">Uploads</th><td><code>{{ storage.uploads }}</code></td></tr>
+        <tr><th scope="row">Upload limit</th><td>{{ storage.max_upload_mb }} MB per file</td></tr>
+        <tr><th scope="row">Accepted formats</th><td>{{ storage.allowed_extensions | join(', ') }}</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="faint" style="margin-top:0.75rem;">
+    There is no account and no sync. Delete these paths and StudyForge forgets everything.
+  </p>
+</section>
+
+<section class="panel" style="margin-bottom:1.5rem;">
+  <div class="panel__header"><h2>Scheduling</h2></div>
+  <div class="table-wrap">
+    <table>
+      <caption class="visually-hidden">Spaced repetition settings</caption>
+      <tbody>
+        <tr><th scope="row">Algorithm</th><td>FSRS-6 ({{ scheduler.parameter_count }} parameters, published defaults)</td></tr>
+        <tr><th scope="row">Target retention</th><td>{{ scheduler.desired_retention | percent }}</td></tr>
+        <tr><th scope="row">Learning steps</th><td>{{ scheduler.learning_steps | join(', ') }}</td></tr>
+        <tr><th scope="row">Relearning steps</th><td>{{ scheduler.relearning_steps | join(', ') }}</td></tr>
+        <tr><th scope="row">Interval fuzzing</th><td>Off — scheduling is fully reproducible</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="faint" style="margin-top:0.75rem;">
+    No language model influences scheduling. See
+    <a href="https://github.com/mateoosoriodelhonte/studyforge/blob/main/docs/STUDY_ENGINE.md">docs/STUDY_ENGINE.md</a>
+    for the formulas and how the implementation was verified.
+  </p>
+</section>
+
+<section class="panel">
+  <div class="panel__header"><h2>Build</h2></div>
+  <div class="table-wrap">
+    <table>
+      <caption class="visually-hidden">Build information</caption>
+      <tbody>
+        <tr><th scope="row">Version</th><td><code>{{ version }}</code></td></tr>
+        <tr><th scope="row">Environment</th><td><code>{{ environment }}</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

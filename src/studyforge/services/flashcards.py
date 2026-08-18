@@ -216,7 +216,7 @@ def _existing_keys(session: Session, course_id: int) -> set[tuple[int, str]]:
 
 
 def _infer_strategy(front: str) -> str:
-    if front.startswith("What is "):
+    if front.startswith("Define: "):
         return CardStrategy.TERM_TO_DEFINITION.value
     if front.startswith("Which term is described here?"):
         return CardStrategy.DEFINITION_TO_TERM.value

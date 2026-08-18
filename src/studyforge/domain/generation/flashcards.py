@@ -3,7 +3,7 @@
 Three strategies, in descending order of how well they test understanding:
 
 ``TERM_TO_DEFINITION``
-    "What is an AVL tree?" -> the definition. Recall of meaning.
+    "Define: AVL tree" -> the definition. Recall of meaning.
 
 ``DEFINITION_TO_TERM``
     "Which term is described here: ...?" -> the name. Recognition from
@@ -108,7 +108,7 @@ def _build(concept: ConceptSource, strategy: CardStrategy) -> CardCandidate | No
 
     match strategy:
         case CardStrategy.TERM_TO_DEFINITION:
-            front, back = f"What is {_article(name)}{name}?", definition
+            front, back = f"Define: {name}", definition
         case CardStrategy.DEFINITION_TO_TERM:
             front = f"Which term is described here?\n\n{_blank_out(definition, name)[0]}"
             back = name
@@ -134,6 +134,14 @@ def _build(concept: ConceptSource, strategy: CardStrategy) -> CardCandidate | No
         source_document_id=concept.source_document_id,
         source_chunk_id=concept.source_chunk_id,
     )
+
+
+# A note on phrasing: an earlier version wrote "What is {a|an} {term}?", which
+# needs to know whether the term is a countable noun. It is not: "What is a
+# Big-O notation?" is wrong, and no article rule fixes both that and "an AVL
+# tree" without part-of-speech tagging this module deliberately does not do.
+# "Define: X" is grammatical for every term, and is how study cards are usually
+# written anyway.
 
 
 def _blank_out(definition: str, term: str) -> tuple[str, int]:

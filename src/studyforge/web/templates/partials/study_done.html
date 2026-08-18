@@ -1,0 +1,17 @@
+{% from "components/macros.html" import stat %}
+<section class="panel" data-announce="Session complete">
+  <h2 style="font-size:var(--step-2);margin-bottom:0.5rem;">Queue cleared</h2>
+  <p class="muted" style="margin-bottom:1.25rem;">
+    Everything due has been reviewed and rescheduled. Nothing else is waiting.
+  </p>
+  <div class="grid grid--stats" style="margin-bottom:1.5rem;">
+    {{ stat(session.cards_reviewed, 'Reviewed') }}
+    {{ stat(session.cards_reviewed - session.again_count, 'Recalled') }}
+    {{ stat(session.again_count, 'Forgotten') }}
+    {{ stat(session.recall_rate | percent, 'Recall rate') }}
+  </div>
+  <div class="button-row">
+    <a class="button button--primary" href="/dashboard">Back to dashboard</a>
+    <a class="button" href="/progress">See progress</a>
+  </div>
+</section>

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import notice %}
+{% block title %}{{ quiz.title }} — StudyForge{% endblock %}
+{% block main_class %}reading{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header__text">
+    <p class="breadcrumb"><a href="/courses/{{ quiz.course_id }}">{{ course.name }}</a> / Quiz</p>
+    <h1>{{ quiz.title }}</h1>
+    <p>{{ quiz.question_count }} {{ quiz.question_count | plural('question') }}. Your answers feed the weak-concept analysis.</p>
+  </div>
+</div>
+
+<div id="quiz-body">
+  {% include "partials/quiz_question.html" %}
+</div>
+{% endblock %}

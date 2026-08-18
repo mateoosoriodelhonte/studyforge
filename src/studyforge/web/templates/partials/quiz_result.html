@@ -1,0 +1,47 @@
+{% from "components/macros.html" import stat %}
+<section class="panel" data-announce="Quiz finished">
+  <h2 style="font-size:var(--step-2);margin-bottom:1rem;">Quiz finished</h2>
+
+  <div class="grid grid--stats" style="margin-bottom:1.5rem;">
+    {{ stat(attempt.correct_count ~ ' / ' ~ attempt.question_count, 'Score') }}
+    {{ stat(attempt.accuracy | percent, 'Accuracy') }}
+    {% if self_graded %}{{ stat(self_graded, 'Self-graded') }}{% endif %}
+  </div>
+
+  {% if self_graded %}
+  <p class="faint" style="margin-bottom:1rem;">
+    {{ self_graded }} {{ self_graded | plural('answer') }} marked correct by you rather than by the
+    grader. These are tracked separately on the progress page.
+  </p>
+  {% endif %}
+
+  <div class="table-wrap" style="margin-bottom:1.5rem;">
+    <table>
+      <caption class="visually-hidden">Answers in this attempt</caption>
+      <thead><tr><th scope="col">Question</th><th scope="col">Result</th></tr></thead>
+      <tbody>
+        {% for row in review_rows %}
+        <tr>
+          <td>{{ row.question.prompt | truncate(90) }}</td>
+          <td>
+            {% if row.answer is none %}
+              <span class="badge badge--neutral">Skipped</span>
+            {% elif row.answer.self_graded %}
+              <span class="badge badge--warning">Self-graded</span>
+            {% elif row.answer.is_correct %}
+              <span class="badge badge--success">Correct</span>
+            {% else %}
+              <span class="badge badge--danger">Wrong</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="button-row">
+    <a class="button button--primary" href="/courses/{{ quiz.course_id }}">Back to course</a>
+    <a class="button" href="/progress">See progress</a>
+  </div>
+</section>

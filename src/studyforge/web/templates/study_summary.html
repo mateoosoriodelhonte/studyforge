@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import stat %}
+{% block title %}Session finished — StudyForge{% endblock %}
+{% block main_class %}reading{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header__text">
+    <h1>Session finished</h1>
+    <p>
+      {% if session.cards_reviewed %}
+      Here is what you got through. Everything you reviewed has been rescheduled.
+      {% else %}
+      You did not review anything this time. No harm done.
+      {% endif %}
+    </p>
+  </div>
+</div>
+
+<section class="grid grid--stats" aria-label="Session summary" style="margin-bottom:2rem;">
+  {{ stat(session.cards_reviewed, 'Cards reviewed') }}
+  {{ stat(session.cards_reviewed - session.again_count, 'Recalled') }}
+  {{ stat(session.again_count, 'Forgotten') }}
+  {{ stat(session.recall_rate | percent, 'Recall rate') }}
+</section>
+
+<div class="button-row">
+  <a class="button button--primary" href="/study">Study more</a>
+  <a class="button" href="/progress">See progress</a>
+  <a class="button button--quiet" href="/dashboard">Dashboard</a>
+</div>
+{% endblock %}

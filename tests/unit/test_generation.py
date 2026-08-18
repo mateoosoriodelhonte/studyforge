@@ -78,9 +78,9 @@ class TestFlashcardQualityBar:
 
 
 class TestFlashcardStrategies:
-    def test_term_to_definition_asks_what_it_is(self) -> None:
+    def test_term_to_definition_asks_for_the_meaning(self) -> None:
         [card] = generate_cards([AVL], strategies=(CardStrategy.TERM_TO_DEFINITION,))
-        assert card.front == "What is an AVL tree?"
+        assert card.front == "Define: AVL tree"
         assert card.back == AVL.definition
 
     def test_definition_to_term_hides_the_answer_in_the_prompt(self) -> None:
@@ -100,13 +100,18 @@ class TestFlashcardStrategies:
         assert card.back == "Heap"
 
     @pytest.mark.parametrize(
-        ("name", "expected"),
-        [("AVL tree", "an AVL tree"), ("Heap", "a Heap"), ("BST", "BST"), ("Edge", "an Edge")],
+        "name",
+        ["AVL tree", "Heap", "BST", "Big-O notation", "amortised analysis", "Quicksort"],
     )
-    def test_the_article_reads_naturally(self, name: str, expected: str) -> None:
+    def test_the_prompt_is_grammatical_for_every_kind_of_term(self, name: str) -> None:
+        """Mass nouns, proper nouns, acronyms and ordinary count nouns all read
+        correctly, which an article-inserting rule cannot manage without
+        part-of-speech tagging."""
         concept = ConceptSource(1, name, name.lower(), AVL.definition)
         [card] = generate_cards([concept], strategies=(CardStrategy.TERM_TO_DEFINITION,))
-        assert card.front == f"What is {expected}?"
+        assert card.front == f"Define: {name}"
+        assert " a Big-O" not in card.front
+        assert " an Quicksort" not in card.front
 
 
 class TestFlashcardProvenance:

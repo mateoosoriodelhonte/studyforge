@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import stat, badge, empty_state, document_status, notice, concept_status %}
+{% block title %}{{ course.name }} — StudyForge{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header__text">
+    <p class="breadcrumb"><a href="/dashboard">Dashboard</a> / {{ course.name }}</p>
+    <h1>{{ course.name }}</h1>
+    <p>
+      {% if course.code %}<span class="course-card__code">{{ course.code }}</span> &middot; {% endif %}
+      {{ course.description or 'No description.' }}
+      {% if course.is_archived %} {{ badge('Archived', 'neutral') }}{% endif %}
+    </p>
+  </div>
+  <div class="page-header__actions">
+    {% if stats.due_now %}
+    <a class="button button--primary" href="/study?course_id={{ course.id }}">Study {{ stats.due_now }} due</a>
+    {% endif %}
+    <a class="button" href="/courses/{{ course.id }}/documents/new">Add material</a>
+    <a class="button button--quiet" href="/courses/{{ course.id }}/edit">Edit</a>
+  </div>
+</div>
+
+<section class="grid grid--stats" aria-label="Course summary" style="margin-bottom:2rem;">
+  {{ stat(stats.documents, stats.documents | plural('Document')) }}
+  {{ stat(stats.concepts, stats.concepts | plural('Concept')) }}
+  {{ stat(stats.flashcards, stats.flashcards | plural('Card')) }}
+  {{ stat(stats.due_now, 'Due now', attention=stats.due_now > 0) }}
+  {{ stat(stats.new_cards, 'New') }}
+</section>
+
+{% if stats.is_empty %}
+{{ empty_state(
+    'This course has nothing in it yet',
+    'Paste your notes or upload a PDF. StudyForge will extract the text, split it at meaningful boundaries, and find the concepts it defines.',
+    'Add study material', '/courses/' ~ course.id ~ '/documents/new') }}
+{% endif %}
+
+<div class="grid grid--split" style="margin-bottom:2rem;">
+  <section class="panel">
+    <div class="panel__header">
+      <h2>Documents</h2>
+      <a class="button button--quiet" href="/courses/{{ course.id }}/documents/new">Add</a>
+    </div>
+    {% if documents %}
+    <div class="table-wrap">
+      <table>
+        <caption class="visually-hidden">Documents in this course</caption>
+        <thead><tr><th scope="col">Title</th><th scope="col">Status</th><th scope="col" class="numeric">Chunks</th></tr></thead>
+        <tbody>
+          {% for entry in documents %}
+          <tr>
+            <td><a href="/documents/{{ entry.document.id }}">{{ entry.document.title }}</a>
+              <br><span class="faint">{{ entry.document.source_type.value }} &middot; {{ entry.document.created_at | relative_time }}</span></td>
+            <td>{{ document_status(entry.document) }}</td>
+            <td class="numeric">{{ entry.chunk_count }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="muted">No documents yet.</p>
+    {% endif %}
+  </section>
+
+  <section class="panel">
+    <div class="panel__header">
+      <h2>Concepts</h2>
+      <span class="faint">{{ concepts | length }} shown</span>
+    </div>
+    {% if concepts %}
+    <p class="faint" style="margin-bottom:0.75rem;">
+      Extracted by pattern matching, not comprehension. Edit or delete anything that is wrong.
+    </p>
+    <ul class="concept-list">
+      {% for item in concepts[:12] %}
+      <li class="concept">
+        <div class="concept__head">
+          <span class="concept__name">{{ item.concept.name }}</span>
+          {{ badge(item.concept.extraction_method.value | replace('_',' '), 'neutral') }}
+          {% if item.assessment %}{{ concept_status(item.assessment.status.value, item.assessment.status_definition) }}{% endif %}
+        </div>
+        {% if item.concept.definition %}
+        <p class="concept__definition">{{ item.concept.definition | truncate(160) }}</p>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% if concepts | length > 12 %}
+    <p class="faint" style="margin-top:0.75rem;">and {{ concepts | length - 12 }} more.</p>
+    {% endif %}
+    {% else %}
+    <p class="muted">No concepts yet. They appear once you add material with definitions in it.</p>
+    {% endif %}
+  </section>
+</div>
+
+<section class="panel" style="margin-bottom:2rem;" id="cards">
+  <div class="panel__header">
+    <h2>Flashcards</h2>
+    <div class="button-row">
+      <form method="post" action="/courses/{{ course.id }}/cards/generate" style="display:inline;">
+        <button type="submit" class="button">Generate from concepts</button>
+      </form>
+      <a class="button" href="/courses/{{ course.id }}/cards/new">Write a card</a>
+    </div>
+  </div>
+
+  {% if cards %}
+  <div class="table-wrap">
+    <table>
+      <caption class="visually-hidden">Flashcards in this course</caption>
+      <thead>
+        <tr><th scope="col">Front</th><th scope="col">Back</th><th scope="col">Source</th><th scope="col">Due</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr>
+      </thead>
+      <tbody id="card-rows">
+        {% for card in cards %}
+        {% include "partials/card_row.html" %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="muted">
+    No cards yet. Generate them from the concepts above, or write your own.
+    Generation only produces a card when a concept has a definition to answer with.
+  </p>
+  {% endif %}
+</section>
+
+<section class="panel">
+  <div class="panel__header">
+    <h2>Quizzes</h2>
+    <form method="post" action="/courses/{{ course.id }}/quizzes/generate" style="display:inline;">
+      <button type="submit" class="button">Generate a quiz</button>
+    </form>
+  </div>
+  {% if quizzes %}
+  <div class="table-wrap">
+    <table>
+      <caption class="visually-hidden">Quizzes in this course</caption>
+      <thead><tr><th scope="col">Quiz</th><th scope="col" class="numeric">Questions</th><th scope="col">Created</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+      <tbody>
+        {% for quiz in quizzes %}
+        <tr>
+          <td>{{ quiz.title }}</td>
+          <td class="numeric">{{ quiz.question_count }}</td>
+          <td><time datetime="{{ quiz.created_at.isoformat() }}">{{ quiz.created_at | relative_time }}</time></td>
+          <td><a class="button button--quiet" href="/quizzes/{{ quiz.id }}">Take it</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="muted">
+    No quizzes yet. StudyForge builds multiple-choice questions only when this
+    course has enough related concepts to make the wrong answers plausible —
+    otherwise it writes short-answer questions instead.
+  </p>
+  {% endif %}
+</section>
+{% endblock %}

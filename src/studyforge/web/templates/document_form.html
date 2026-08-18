@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import field, textarea_field, notice %}
+{% block title %}Add material — {{ course.name }}{% endblock %}
+{% block main_class %}reading{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header__text">
+    <p class="breadcrumb"><a href="/courses/{{ course.id }}">{{ course.name }}</a> / Add material</p>
+    <h1>Add study material</h1>
+    <p>Paste your notes, or upload a text file or PDF. StudyForge extracts the text and finds the concepts it defines.</p>
+  </div>
+</div>
+
+<section class="panel" style="margin-bottom:1.5rem;">
+  <h2 style="font-size:var(--step-1);margin-bottom:0.75rem;">Paste notes</h2>
+  <form method="post" action="/courses/{{ course.id }}/documents/paste" novalidate>
+    {{ field('title', 'Title', values.get('title'), errors, required=True, placeholder='Lecture 4 — Balanced trees') }}
+    {{ textarea_field('body', 'Notes', values.get('body'), errors, required=True, rows=14,
+        hint='Headings, definitions and glossary lines give the best results.',
+        placeholder='An AVL tree is a self-balancing binary search tree...') }}
+    <div class="button-row">
+      <button type="submit" class="button button--primary">Save notes</button>
+    </div>
+  </form>
+</section>
+
+<section class="panel">
+  <h2 style="font-size:var(--step-1);margin-bottom:0.75rem;">Upload a file</h2>
+  {{ notice(
+      'PDFs must have a text layer. Scans and photographs cannot be read — StudyForge does not run OCR, and will tell you rather than guess.',
+      'info') }}
+  <form method="post" action="/courses/{{ course.id }}/documents/upload" enctype="multipart/form-data" novalidate>
+    <div class="field">
+      <label for="field-file">File</label>
+      <span class="field__hint" id="hint-file">
+        Accepted: {{ allowed_extensions | join(', ') }}. Up to {{ max_upload_mb }} MB.
+      </span>
+      <input type="file" id="field-file" name="file" required
+             accept="{{ allowed_extensions | join(',') }}"
+             aria-describedby="hint-file{{ ' error-file' if 'file' in errors else '' }}"
+             {% if 'file' in errors %}aria-invalid="true"{% endif %}>
+      {% if 'file' in errors %}<p class="field__error" id="error-file">{{ errors['file'] }}</p>{% endif %}
+    </div>
+    {{ field('title', 'Title', '', errors, hint='Optional. Defaults to the file name.') }}
+    <div class="button-row">
+      <button type="submit" class="button button--primary">Upload</button>
+      <a class="button button--quiet" href="/courses/{{ course.id }}">Cancel</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

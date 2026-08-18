@@ -13,12 +13,19 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from studyforge import __version__
+from studyforge.api import api_router
 from studyforge.config import Environment, Settings, get_settings
 from studyforge.db import create_db_engine, create_session_factory
 from studyforge.logging_config import configure_logging, log_event
+from studyforge.web.errors import install_error_handlers
+from studyforge.web.routers import courses as courses_router
+from studyforge.web.routers import pages as pages_router
+from studyforge.web.routers import study as study_router
+from studyforge.web.templating import STATIC_DIR, build_templates
 
 logger = logging.getLogger(__name__)
 
@@ -86,6 +93,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         same_site="lax",
         https_only=settings.environment is Environment.PRODUCTION,
     )
+
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+    app.include_router(api_router)
+
+    # The HTML interface is deliberately kept out of the OpenAPI schema. It is
+    # a server-rendered UI, not an API: including it would fill the generated
+    # docs with form handlers and HTMX fragments that no client should call,
+    # and bury the JSON surface that is actually a contract.
+    for html_router in (pages_router.router, courses_router.router, study_router.router):
+        app.include_router(html_router, include_in_schema=False)
+
+    install_error_handlers(app, build_templates())
 
     @app.get("/healthz", include_in_schema=False)
     async def healthz() -> dict[str, str]:

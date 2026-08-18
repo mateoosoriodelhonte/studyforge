@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import stat, rate_stat, badge, empty_state, concept_status %}
+{% block title %}Progress — StudyForge{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header__text">
+    <h1>Progress</h1>
+    <p>
+      {% if course %}For {{ course.name }}.{% else %}Across every course.{% endif %}
+      Figures cover the last {{ recent_window_days }} days unless stated otherwise.
+    </p>
+  </div>
+  <div class="page-header__actions">
+    <form method="get" action="/progress">
+      <label for="course-filter" class="visually-hidden">Filter by course</label>
+      <select id="course-filter" name="course_id" onchange="this.form.submit()">
+        <option value="">All courses</option>
+        {% for option in all_courses %}
+        <option value="{{ option.id }}" {% if course and option.id == course.id %}selected{% endif %}>{{ option.name }}</option>
+        {% endfor %}
+      </select>
+      <noscript><button type="submit" class="button">Filter</button></noscript>
+    </form>
+  </div>
+</div>
+
+{% if report.is_empty %}
+{{ empty_state(
+    'Nothing to report yet',
+    'Progress appears once you have added material and reviewed some cards. There is no data to summarise, so there is nothing shown — rather than zeroes dressed up as insight.',
+    'Add a course', '/courses/new') }}
+{% else %}
+
+<section class="grid grid--stats" aria-label="Card counts" style="margin-bottom:1.25rem;">
+  {{ stat(report.total_cards, 'Cards') }}
+  {{ stat(report.due_now, 'Due now', attention=report.due_now > 0) }}
+  {{ stat(report.overdue, 'Overdue', attention=report.overdue > 0) }}
+  {{ stat(report.new_cards, 'Not yet seen') }}
+  {{ stat(report.suspended_cards, 'Suspended') }}
+</section>
+
+<section class="grid grid--stats" aria-label="Accuracy" style="margin-bottom:2rem;">
+  {{ rate_stat(report.review_recall, 'Card recall') }}
+  {{ rate_stat(report.quiz_accuracy, 'Quiz accuracy') }}
+  {{ stat(report.reviews_total, 'Reviews all time') }}
+  {{ stat(report.self_graded_answers, 'Self-graded', 'excluded from grading') }}
+</section>
+
+<div class="grid grid--split" style="margin-bottom:2rem;">
+  <section class="panel">
+    <div class="panel__header"><h2>Activity</h2></div>
+    <p class="faint" style="margin-bottom:0.5rem;">Reviews and quiz answers per day, last {{ report.activity | length }} days. Days with nothing are shown too.</p>
+    <div class="activity" role="img"
+         aria-label="Daily activity over the last {{ report.activity | length }} days. Busiest day: {{ busiest }} items.">
+      {% for day in report.activity %}
+      <div class="activity__day"
+           data-active="{{ 'true' if day.total else 'false' }}"
+           style="height: {{ (day.total / busiest * 100) if busiest else 2 }}%; min-height:2px;"
+           title="{{ day.day }}: {{ day.total }} {{ day.total | plural('item') }}"></div>
+      {% endfor %}
+    </div>
+    <div class="activity__axis">
+      <span>{{ report.activity[0].day.strftime('%d %b') if report.activity }}</span>
+      <span>today</span>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel__header"><h2>Concept status</h2></div>
+    <div class="table-wrap">
+      <table>
+        <caption class="visually-hidden">How many concepts are in each status</caption>
+        <thead><tr><th scope="col">Status</th><th scope="col" class="numeric">Concepts</th><th scope="col">What it means</th></tr></thead>
+        <tbody>
+          {% for status, definition in status_definitions %}
+          <tr>
+            <td>{{ concept_status(status, definition) }}</td>
+            <td class="numeric">{{ report.status_counts.get(status_enum(status), 0) }}</td>
+            <td class="faint">{{ definition }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<section class="panel">
+  <div class="panel__header">
+    <h2>Concepts that need work</h2>
+    <span class="faint">Worst first</span>
+  </div>
+  {% if weak_rows %}
+  <div class="table-wrap">
+    <table>
+      <caption class="visually-hidden">Concepts with the lowest recent accuracy</caption>
+      <thead>
+        <tr><th scope="col">Concept</th><th scope="col">Status</th><th scope="col" class="numeric">Accuracy</th><th scope="col" class="numeric">Answers</th><th scope="col">Last seen</th></tr>
+      </thead>
+      <tbody>
+        {% for row in weak_rows %}
+        <tr>
+          <td>{{ row.name }}</td>
+          <td>{{ concept_status(row.assessment.status.value, row.assessment.status_definition) }}</td>
+          <td class="numeric">{{ row.assessment.accuracy | percent }}</td>
+          <td class="numeric">{{ row.assessment.observation_count }}</td>
+          <td><time datetime="{{ row.assessment.last_seen_at.isoformat() }}">{{ row.assessment.last_seen_at | relative_time }}</time></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="muted">
+    Nothing flagged. A concept only appears here once you have answered it at
+    least {{ min_observations }} times — below that there is not enough evidence
+    to call it weak, and guessing would be worse than saying nothing.
+  </p>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}
