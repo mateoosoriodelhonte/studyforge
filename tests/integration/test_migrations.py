@@ -15,6 +15,7 @@ from alembic.config import Config
 from alembic.script import ScriptDirectory
 from sqlalchemy import Engine, create_engine, inspect
 
+from studyforge.cli import alembic_config as build_alembic_config
 from studyforge.config import Settings
 from studyforge.models import Base
 
@@ -36,9 +37,10 @@ def alembic_config(settings: Settings, monkeypatch: pytest.MonkeyPatch) -> Confi
 
     get_settings.cache_clear()
 
-    config = Config(str(REPO_ROOT / "alembic.ini"))
-    config.set_main_option("script_location", str(REPO_ROOT / "migrations"))
-    yield config
+    # Use the production helper rather than building a Config here: an earlier
+    # version of this fixture pinned script_location itself, which meant the
+    # suite passed while the real CLI was broken outside the repository root.
+    yield build_alembic_config()
     get_settings.cache_clear()
 
 
@@ -96,3 +98,40 @@ class TestRevisionHygiene:
         revisions = list(script.walk_revisions())
         assert revisions
         assert all(r.module.upgrade for r in revisions)
+
+
+class TestRunsFromAnyWorkingDirectory:
+    """``studyforge db init`` must not depend on where the user is standing.
+
+    ``alembic.ini`` resolves its relative ``script_location`` against the
+    current working directory, so a config built from the ini alone only works
+    inside the repository root. Anyone who set ``DATA_DIR`` and ran the command
+    from elsewhere hit a bare ``CommandError`` instead of a database.
+    """
+
+    def test_config_paths_are_absolute(self) -> None:
+        config = build_alembic_config()
+        script_location = config.get_main_option("script_location")
+        assert script_location is not None
+        assert Path(script_location).is_absolute()
+        assert Path(script_location).is_dir()
+
+    def test_db_init_succeeds_from_an_unrelated_directory(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from studyforge.cli import main
+        from studyforge.config import get_settings
+
+        elsewhere = tmp_path / "elsewhere"
+        elsewhere.mkdir()
+        data_dir = tmp_path / "data"
+
+        monkeypatch.chdir(elsewhere)
+        monkeypatch.setenv("DATA_DIR", str(data_dir))
+        monkeypatch.delenv("DATABASE_URL", raising=False)
+        get_settings.cache_clear()
+        try:
+            assert main(["db", "init"]) == 0
+            assert (data_dir / "studyforge.db").exists()
+        finally:
+            get_settings.cache_clear()

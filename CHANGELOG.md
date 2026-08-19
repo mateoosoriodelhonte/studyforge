@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `studyforge db init` failed with a bare Alembic `CommandError` when run from
+  any directory other than the repository root, because `alembic.ini` resolves
+  its relative `script_location` against the current working directory. The CLI
+  now pins the migration paths absolutely, so the command works from anywhere —
+  which matters when `DATA_DIR` points somewhere outside the checkout. The
+  migration tests previously built their own Alembic config and so never
+  exercised the broken path; they now use the same helper the CLI does.
+
 ## [1.0.0] - 2026-08-18
 
 The first complete version. StudyForge ingests your notes, extracts the
