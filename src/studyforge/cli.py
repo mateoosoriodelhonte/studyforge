@@ -5,8 +5,32 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from studyforge import __version__
+
+if TYPE_CHECKING:
+    from alembic.config import Config
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def alembic_config() -> Config:
+    """Build the Alembic config with absolute paths.
+
+    ``alembic.ini`` declares ``script_location = migrations``, and Alembic
+    resolves that relative path against the *current working directory* rather
+    than against the ini file. Loading the ini alone therefore only works when
+    the caller happens to be standing in the repository root, so ``studyforge
+    db init`` would fail from anywhere else. Pinning both paths here is what
+    makes the command work regardless of where it is invoked from.
+    """
+    from alembic.config import Config
+
+    config = Config(str(REPO_ROOT / "alembic.ini"))
+    config.set_main_option("script_location", str(REPO_ROOT / "migrations"))
+    config.set_main_option("prepend_sys_path", str(REPO_ROOT / "src"))
+    return config
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -60,14 +84,13 @@ def main(argv: list[str] | None = None) -> int:
 def _run_db_command(command: str) -> int:
     """Run Alembic programmatically so users need one tool, not two."""
     from alembic import command as alembic_command
-    from alembic.config import Config
 
     from studyforge.config import get_settings
 
     settings = get_settings()
     settings.ensure_directories()
 
-    config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
+    config = alembic_config()
 
     if command == "init":
         alembic_command.upgrade(config, "head")
